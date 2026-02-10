@@ -1,0 +1,56 @@
+Database Migrations for Investment Research Platform
+===================================================
+
+This directory contains Alembic database migration scripts managed by Flask-Migrate.
+
+Directory Structure
+-------------------
+- alembic.ini: Alembic configuration file
+- env.py: Alembic environment configuration for Flask-SQLAlchemy integration
+- script.py.mako: Template for generating new migration scripts
+- versions/: Directory containing migration scripts
+
+Usage
+-----
+All migration commands should be run from the project root directory
+(src/).
+
+1. Initialize migrations (already done):
+   flask db init
+
+2. Generate a new migration after model changes:
+   flask db migrate -m "Description of changes"
+
+3. Apply migrations to the database:
+   flask db upgrade
+
+4. Rollback the last migration:
+   flask db downgrade
+
+5. Show current migration status:
+   flask db current
+
+6. Show migration history:
+   flask db history
+
+Models
+------
+The following SQLAlchemy models are tracked:
+
+1. ScreeningStrategyPO (screening_strategies table)
+   - Stores screening strategy definitions
+   - Uses JSONB for filters, scoring_config, and tags
+
+2. ScreeningSessionPO (screening_sessions table)
+   - Records screening execution results
+   - Uses JSONB for top_stocks, other_stock_codes, filters_snapshot, scoring_config_snapshot
+
+3. WatchListPO (watchlists table)
+   - Manages user watchlists
+   - Uses JSONB for stocks list
+
+Notes
+-----
+- All JSONB columns require PostgreSQL database
+- The initial migration creates all three tables with appropriate indexes
+- Foreign key constraints are intentionally omitted to allow independent deletion

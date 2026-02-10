@@ -1,0 +1,8 @@
+.venv/
+.hypothesis/
+.env
+.vscode/
+__pycache__/
+.pytest_cache/
+pytest.ini
+node_modules/
