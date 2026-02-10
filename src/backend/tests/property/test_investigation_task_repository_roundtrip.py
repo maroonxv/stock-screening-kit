@@ -73,12 +73,12 @@ _test_app = _create_test_app()
 
 # === Hypothesis 自定义策略 ===
 
-# 不含 NUL 字符的安全文本（SQLite/JSON 兼容）
+# 不含 NUL 字符的安全文本（SQLite/JSON 兼容），且不能为纯空白字符
 safe_text = st.text(
     alphabet=st.characters(blacklist_categories=("Cs",), blacklist_characters="\x00"),
     min_size=1,
     max_size=50,
-)
+).filter(lambda s: s.strip())
 safe_text_optional = st.one_of(
     st.none(),
     st.text(

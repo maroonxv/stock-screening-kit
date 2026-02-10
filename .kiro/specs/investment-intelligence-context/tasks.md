@@ -110,30 +110,30 @@
     - **Property 10: InvestigationTask 持久化 round-trip**
     - **Validates: Requirements 5.3**
 
-- [ ] 8. 实现基础设施层 AI 工作流
-  - [-] 8.1 创建 `infrastructure/ai/deepseek_client.py`，实现 DeepSeek LLM 客户端
+- [x] 8. 实现基础设施层 AI 工作流
+  - [x] 8.1 创建 `infrastructure/ai/deepseek_client.py`，实现 DeepSeek LLM 客户端
     - 封装 DeepSeek API 调用，支持超时控制和重试
     - _Requirements: 6.4, 10.5_
-  - [~] 8.2 创建 `infrastructure/ai/industry_research_workflow.py`，实现快速行业认知 LangGraph 工作流
+  - [x] 8.2 创建 `infrastructure/ai/industry_research_workflow.py`，实现快速行业认知 LangGraph 工作流
     - 定义 IndustryResearchState TypedDict
     - 实现 5 个 Agent 节点函数
     - 构建 StateGraph 并配置 Redis checkpointer
     - 实现 IIndustryResearchService 接口
     - _Requirements: 6.1, 6.2, 6.5, 6.7_
-  - [~] 8.3 创建 `infrastructure/ai/credibility_workflow.py`，实现概念可信度验证 LangGraph 工作流
+  - [x] 8.3 创建 `infrastructure/ai/credibility_workflow.py`，实现概念可信度验证 LangGraph 工作流
     - 分析维度：主营业务匹配、证据收集、历史蹭热点检测、供应链逻辑
     - 实现 ICredibilityVerificationService 接口
     - _Requirements: 6.3, 6.7_
-  - [~] 8.4 实现 Agent 失败重试机制
+  - [x] 8.4 实现 Agent 失败重试机制
     - LangGraph 节点错误处理，记录错误到 AgentStep
     - Redis checkpoint 支持断点续传
     - _Requirements: 6.6, 10.3_
 
-- [ ] 9. Checkpoint - 确保基础设施层完整
+- [x] 9. Checkpoint - 确保基础设施层完整
   - 确保所有测试通过，向用户确认基础设施层实现是否有问题。
 
-- [ ] 10. 实现应用层服务
-  - [~] 10.1 创建 `application/services/investigation_task_service.py`，实现 InvestigationTaskService
+- [x] 10. 实现应用层服务
+  - [x] 10.1 创建 `application/services/investigation_task_service.py`，实现 InvestigationTaskService
     - create_industry_research_task(query) -> task_id
     - create_credibility_verification_task(stock_code, concept) -> task_id
     - get_task(task_id) -> InvestigationTask
@@ -141,20 +141,20 @@
     - cancel_task(task_id)
     - 异步启动工作流，通过回调更新进度和推送 WebSocket 事件
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
-  - [~] 10.2 编写应用层服务单元测试
+  - [x] 10.2 编写应用层服务单元测试
     - Mock Repository 和工作流服务
     - 测试任务创建、查询、取消流程
     - _Requirements: 7.1, 7.2, 7.3_
 
-- [ ] 11. 实现接口层
-  - [~] 11.1 创建 `interface/dto/task_request_dto.py`，实现请求 DTO
+- [x] 11. 实现接口层
+  - [x] 11.1 创建 `interface/dto/task_request_dto.py`，实现请求 DTO
     - IndustryResearchRequest（query 字段验证）
     - CredibilityVerificationRequest（stock_code、concept 字段验证）
     - _Requirements: 8.8_
-  - [~] 11.2 创建 `interface/dto/task_response_dto.py`，实现响应 DTO
+  - [x] 11.2 创建 `interface/dto/task_response_dto.py`，实现响应 DTO
     - TaskResponseDTO.from_domain(task) -> dict
     - _Requirements: 8.8_
-  - [~] 11.3 创建 `interface/controllers/intelligence_controller.py`，实现 Flask Blueprint
+  - [x] 11.3 创建 `interface/controllers/intelligence_controller.py`，实现 Flask Blueprint
     - POST /api/intelligence/tasks/industry-research
     - POST /api/intelligence/tasks/credibility-verification
     - GET /api/intelligence/tasks/<task_id>
@@ -162,42 +162,42 @@
     - POST /api/intelligence/tasks/<task_id>/cancel
     - 错误处理：400（无效数据）、404（任务不存在）、409（状态冲突）
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.9, 8.10_
-  - [~] 11.4 实现 WebSocket 事件处理
+  - [x] 11.4 实现 WebSocket 事件处理
     - task_progress 事件推送
     - task_completed 事件推送
     - _Requirements: 8.6, 8.7_
-  - [~] 11.5 编写接口层集成测试
+  - [x] 11.5 编写接口层集成测试
     - 测试 API 端点的请求/响应
     - 测试无效数据返回 400、不存在资源返回 404
     - _Requirements: 8.9, 8.10_
 
-- [~] 12. 注册 Blueprint 并集成到 Flask 应用
+- [x] 12. 注册 Blueprint 并集成到 Flask 应用
   - 在 `app.py` 中注册 intelligence Blueprint
   - 配置 WebSocket（Flask-SocketIO）
   - 配置依赖注入（Repository、Service 实例化）
   - _Requirements: 8.1-8.7_
 
-- [ ] 13. 实现前端页面
-  - [~] 13.1 创建快速行业认知页面组件
+- [x] 13. 实现前端页面
+  - [x] 13.1 创建快速行业认知页面组件
     - 查询输入框 + 提交按钮
     - 任务进度展示（各 Agent 状态）
     - 结果展示（行业总结、核心标的列表、风险提示、催化剂）
     - _Requirements: 9.1, 9.2, 9.3_
-  - [~] 13.2 创建概念可信度验证页面组件
+  - [x] 13.2 创建概念可信度验证页面组件
     - 股票代码 + 概念输入
     - 可信度评分仪表盘
     - 各维度分析详情展示
     - _Requirements: 9.4_
-  - [~] 13.3 创建调研任务历史列表页面
+  - [x] 13.3 创建调研任务历史列表页面
     - 任务列表（状态、类型、创建时间）
     - WebSocket 实时更新进度
     - _Requirements: 9.5, 9.6_
-  - [~] 13.4 创建前端 API 服务层
+  - [x] 13.4 创建前端 API 服务层
     - intelligenceApi：createIndustryResearch、createCredibilityVerification、getTask、listTasks、cancelTask
     - WebSocket 连接管理
     - _Requirements: 9.1-9.6_
 
-- [ ] 14. Final Checkpoint - 确保所有测试通过
+- [x] 14. Final Checkpoint - 确保所有测试通过
   - 确保所有测试通过，向用户确认是否有问题。
 
 ## 备注

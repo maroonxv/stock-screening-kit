@@ -1,5 +1,21 @@
 import axios from 'axios';
 
+// 导出智能分析 API 服务
+export { 
+  intelligenceApi, 
+  intelligenceWebSocket,
+  connectWebSocket,
+  disconnectWebSocket,
+  isWebSocketConnected,
+  onTaskProgress,
+  onTaskCompleted,
+  onConnect,
+  onDisconnect,
+  onError,
+  joinTaskRoom,
+  leaveTaskRoom,
+} from './intelligenceApi';
+
 const apiClient = axios.create({
   baseURL: '/api',
   headers: { 'Content-Type': 'application/json' },

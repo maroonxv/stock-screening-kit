@@ -3,6 +3,9 @@ import {
   UnorderedListOutlined,
   PlusSquareOutlined,
   BarChartOutlined,
+  RocketOutlined,
+  SafetyCertificateOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 
@@ -23,6 +26,21 @@ const menuItems = [
     key: '/results',
     icon: <BarChartOutlined />,
     label: '筛选结果',
+  },
+  {
+    key: '/intelligence/industry-research',
+    icon: <RocketOutlined />,
+    label: '快速行业认知',
+  },
+  {
+    key: '/intelligence/credibility-verification',
+    icon: <SafetyCertificateOutlined />,
+    label: '概念可信度验证',
+  },
+  {
+    key: '/intelligence/task-history',
+    icon: <HistoryOutlined />,
+    label: '调研任务历史',
   },
 ];
 
