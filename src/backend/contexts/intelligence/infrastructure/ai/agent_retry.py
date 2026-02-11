@@ -18,8 +18,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Callable, Dict, Optional
 
-from src.backend.contexts.intelligence.domain.enums.enums import AgentStepStatus
-from src.backend.contexts.intelligence.domain.value_objects.agent_step import AgentStep
+from contexts.intelligence.domain.enums.enums import AgentStepStatus
+from contexts.intelligence.domain.value_objects.agent_step import AgentStep
 
 logger = logging.getLogger(__name__)
 

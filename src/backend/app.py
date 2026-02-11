@@ -399,4 +399,4 @@ def register_error_handlers(app):
 if __name__ == '__main__':
     app = create_app()
     # 使用 socketio.run 以支持 WebSocket
-    socketio.run(app, host='0.0.0.0', port=5015, debug=True)
+    socketio.run(app, host='0.0.0.0', port=5015, debug=True, allow_unsafe_werkzeug=True)

@@ -11,21 +11,21 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from src.backend.contexts.intelligence.domain.enums.enums import (
+from contexts.intelligence.domain.enums.enums import (
     AgentStepStatus,
     RiskLabel,
 )
-from src.backend.contexts.intelligence.domain.exceptions import LLMServiceError
-from src.backend.contexts.intelligence.domain.value_objects.agent_step import AgentStep
-from src.backend.contexts.intelligence.domain.value_objects.credibility_report import (
+from contexts.intelligence.domain.exceptions import LLMServiceError
+from contexts.intelligence.domain.value_objects.agent_step import AgentStep
+from contexts.intelligence.domain.value_objects.credibility_report import (
     CredibilityReport,
 )
-from src.backend.contexts.intelligence.infrastructure.ai.deepseek_client import (
+from contexts.intelligence.infrastructure.ai.deepseek_client import (
     ChatCompletion,
     DeepSeekClient,
     DeepSeekConfig,
 )
-from src.backend.contexts.intelligence.infrastructure.ai.credibility_workflow import (
+from contexts.intelligence.infrastructure.ai.credibility_workflow import (
     CREDIBILITY_AGENT_NAMES,
     CREDIBILITY_AGENT_PROGRESS,
     CredibilityVerificationState,
@@ -331,7 +331,7 @@ class TestCredibilityVerificationWorkflowService:
 
     def test_service_implements_interface(self):
         """测试服务实现 ICredibilityVerificationService 接口"""
-        from src.backend.contexts.intelligence.domain.services.credibility_verification_service import (
+        from contexts.intelligence.domain.services.credibility_verification_service import (
             ICredibilityVerificationService,
         )
 

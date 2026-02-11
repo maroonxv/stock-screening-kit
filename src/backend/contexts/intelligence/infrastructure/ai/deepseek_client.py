@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional
 
 import httpx
 
-from src.backend.contexts.intelligence.domain.exceptions import LLMServiceError
+from contexts.intelligence.domain.exceptions import LLMServiceError
 
 logger = logging.getLogger(__name__)
 

@@ -16,25 +16,25 @@ from unittest.mock import Mock, AsyncMock, patch, MagicMock
 
 import pytest
 
-from src.backend.contexts.intelligence.application.services.investigation_task_service import (
+from contexts.intelligence.application.services.investigation_task_service import (
     InvestigationTaskService,
     IWebSocketEmitter,
 )
-from src.backend.contexts.intelligence.domain.enums.enums import TaskType, TaskStatus
-from src.backend.contexts.intelligence.domain.exceptions import TaskNotFoundError
-from src.backend.contexts.intelligence.domain.models.investigation_task import (
+from contexts.intelligence.domain.enums.enums import TaskType, TaskStatus
+from contexts.intelligence.domain.exceptions import TaskNotFoundError
+from contexts.intelligence.domain.models.investigation_task import (
     InvestigationTask,
 )
-from src.backend.contexts.intelligence.domain.repositories.investigation_task_repository import (
+from contexts.intelligence.domain.repositories.investigation_task_repository import (
     IInvestigationTaskRepository,
 )
-from src.backend.contexts.intelligence.domain.services.credibility_verification_service import (
+from contexts.intelligence.domain.services.credibility_verification_service import (
     ICredibilityVerificationService,
 )
-from src.backend.contexts.intelligence.domain.services.industry_research_service import (
+from contexts.intelligence.domain.services.industry_research_service import (
     IIndustryResearchService,
 )
-from src.backend.contexts.intelligence.domain.value_objects.identifiers import TaskId
+from contexts.intelligence.domain.value_objects.identifiers import TaskId
 from shared_kernel.value_objects.stock_code import StockCode
 
 
@@ -500,16 +500,16 @@ class TestCancelTask:
 
         Requirements: 7.1
         """
-        from src.backend.contexts.intelligence.domain.exceptions import (
+        from contexts.intelligence.domain.exceptions import (
             InvalidTaskStateError,
         )
-        from src.backend.contexts.intelligence.domain.value_objects.industry_insight import (
+        from contexts.intelligence.domain.value_objects.industry_insight import (
             IndustryInsight,
         )
-        from src.backend.contexts.intelligence.domain.value_objects.credibility_score import (
+        from contexts.intelligence.domain.value_objects.credibility_score import (
             CredibilityScore,
         )
-        from src.backend.contexts.intelligence.domain.value_objects.stock_credibility import (
+        from contexts.intelligence.domain.value_objects.stock_credibility import (
             StockCredibility,
         )
 

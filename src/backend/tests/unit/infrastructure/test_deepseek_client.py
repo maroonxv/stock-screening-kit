@@ -11,8 +11,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-from src.backend.contexts.intelligence.domain.exceptions import LLMServiceError
-from src.backend.contexts.intelligence.infrastructure.ai.deepseek_client import (
+from contexts.intelligence.domain.exceptions import LLMServiceError
+from contexts.intelligence.infrastructure.ai.deepseek_client import (
     ChatCompletion,
     ChatMessage,
     DeepSeekClient,

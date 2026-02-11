@@ -12,19 +12,19 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from src.backend.contexts.intelligence.domain.enums.enums import AgentStepStatus
-from src.backend.contexts.intelligence.domain.exceptions import LLMServiceError
-from src.backend.contexts.intelligence.domain.value_objects.agent_step import AgentStep
-from src.backend.contexts.intelligence.domain.value_objects.industry_insight import (
+from contexts.intelligence.domain.enums.enums import AgentStepStatus
+from contexts.intelligence.domain.exceptions import LLMServiceError
+from contexts.intelligence.domain.value_objects.agent_step import AgentStep
+from contexts.intelligence.domain.value_objects.industry_insight import (
     IndustryInsight,
 )
-from src.backend.contexts.intelligence.infrastructure.ai.deepseek_client import (
+from contexts.intelligence.infrastructure.ai.deepseek_client import (
     ChatCompletion,
     ChatMessage,
     DeepSeekClient,
     DeepSeekConfig,
 )
-from src.backend.contexts.intelligence.infrastructure.ai.industry_research_workflow import (
+from contexts.intelligence.infrastructure.ai.industry_research_workflow import (
     AGENT_NAMES,
     AGENT_PROGRESS,
     IndustryResearchState,
@@ -251,7 +251,7 @@ class TestIndustryResearchWorkflowService:
 
     def test_service_implements_interface(self):
         """测试服务实现 IIndustryResearchService 接口"""
-        from src.backend.contexts.intelligence.domain.services.industry_research_service import (
+        from contexts.intelligence.domain.services.industry_research_service import (
             IIndustryResearchService,
         )
 
