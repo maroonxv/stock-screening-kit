@@ -17,5 +17,8 @@ COPY . .
 
 EXPOSE 5015
 
-# 使用 gunicorn 生产级 WSGI 服务器（支持 WebSocket）
-CMD ["python", "app.py"]
+# 复制启动脚本并赋予执行权限
+RUN chmod +x entrypoint.sh
+
+# 先执行数据库迁移，再启动应用
+CMD ["sh", "entrypoint.sh"]
