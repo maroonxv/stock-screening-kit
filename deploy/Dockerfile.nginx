@@ -1,8 +1,8 @@
 # 阶段1：构建前端
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY src/frontend/package.json src/frontend/package-lock.json ./
-RUN npm ci
+COPY src/frontend/package.json ./
+RUN npm install
 COPY src/frontend/ ./
 RUN npm run build
 
