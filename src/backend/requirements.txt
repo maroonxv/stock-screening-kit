@@ -6,7 +6,7 @@ flask-socketio==5.3.6
 # Database
 SQLAlchemy==2.0.23
 Flask-SQLAlchemy==3.1.1
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.10
 Flask-Migrate==4.0.5
 
 # Cache
