@@ -38,6 +38,7 @@ services:
       dockerfile: ../../deploy/Dockerfile.backend
     container_name: investment_research_flask
     environment:
+      FLASK_APP: app.py
       FLASK_ENV: development
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/investment_research_dev
       TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/investment_research_test

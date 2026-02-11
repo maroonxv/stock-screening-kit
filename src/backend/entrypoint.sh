@@ -1,4 +1,8 @@
 #!/bin/sh
-# 等待数据库就绪后执行迁移，然后启动应用
+set -e
+
+echo "Running database migrations..."
 flask db upgrade
+echo "Migrations completed successfully."
+
 exec python app.py
