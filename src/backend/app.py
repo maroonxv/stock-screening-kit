@@ -48,6 +48,25 @@ def create_app(config_name=None):
             InvestigationTaskPO,
         )
     
+    # 自动事务管理：成功请求 commit，失败请求 rollback
+    @app.after_request
+    def _commit_on_success(response):
+        if response.status_code < 400:
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                raise
+        else:
+            db.session.rollback()
+        return response
+
+    @app.teardown_request
+    def _remove_session(exception=None):
+        if exception:
+            db.session.rollback()
+        db.session.remove()
+
     # 注册蓝图
     register_blueprints(app)
     
