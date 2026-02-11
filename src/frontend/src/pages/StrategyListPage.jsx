@@ -16,7 +16,7 @@ function StrategyListPage() {
     setLoading(true);
     try {
       const response = await screeningApi.getStrategies();
-      setStrategies(response.data);
+      setStrategies(response.data.strategies || []);
     } catch (err) {
       message.error('获取策略列表失败: ' + (err.response?.data?.error || err.message));
     } finally {
