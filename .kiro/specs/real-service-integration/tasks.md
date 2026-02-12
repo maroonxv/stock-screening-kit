@@ -103,10 +103,10 @@
     - 获取公告数据后拼接到 LLM prompt 中
     - 数据获取失败时降级为仅使用 LLM 知识
     - _Requirements: 5.4, 5.5_
-  - [-] 7.5 在 `app.py` 的 `get_intelligence_service` 中注入数据提供者
+  - [x] 7.5 在 `app.py` 的 `get_intelligence_service` 中注入数据提供者
     - 创建 AKShare 数据提供者实例并注入到工作流服务中
     - _Requirements: 5.1, 5.2_
-  - [~] 7.6 编写数据提供者和工作流增强的单元测试
+  - [-] 7.6 编写数据提供者和工作流增强的单元测试
     - **Property 7: 外部数据上下文注入**
     - **Validates: Requirements 5.3, 5.4**
 
