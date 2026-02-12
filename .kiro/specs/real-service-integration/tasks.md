@@ -65,16 +65,16 @@
   - 确保所有测试通过，ask the user if questions arise.
 
 - [ ] 5. 后端 DeepSeek API 配置验证
-  - [-] 5.1 在 `src/backend/app.py` 的 `get_intelligence_service` 中添加 API key 缺失警告日志
+  - [x] 5.1 在 `src/backend/app.py` 的 `get_intelligence_service` 中添加 API key 缺失警告日志
     - 当 `DEEPSEEK_API_KEY` 为空时，使用 `logger.warning` 输出明确警告
     - _Requirements: 4.1_
-  - [~] 5.2 在 `intelligence_controller.py` 的任务创建端点中添加 API key 检查
+  - [x] 5.2 在 `intelligence_controller.py` 的任务创建端点中添加 API key 检查
     - 在 `create_industry_research` 和 `create_credibility_verification` 中检查 DeepSeek API key 是否已配置
     - 未配置时返回 400 错误：`{"error": "DeepSeek API 密钥未配置，请在环境变量中设置 DEEPSEEK_API_KEY"}`
     - _Requirements: 4.2_
-  - [~] 5.3 更新 `.env.example` 文件，确保包含所有必需环境变量及说明
+  - [x] 5.3 更新 `.env.example` 文件，确保包含所有必需环境变量及说明
     - _Requirements: 4.3_
-  - [~] 5.4 编写后端 API key 验证的单元测试
+  - [-] 5.4 编写后端 API key 验证的单元测试
     - 测试 API key 为空时的警告日志
     - 测试 API key 为空时的 400 错误响应
     - _Requirements: 4.1, 4.2_
