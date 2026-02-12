@@ -181,8 +181,14 @@ function StrategyListPage() {
         title={null}
         open={!!executingTaskId}
         footer={null}
-        closable={false}
-        maskClosable={false}
+        closable={true}
+        maskClosable={true}
+        onCancel={() => {
+          // 关闭弹窗但不取消任务，任务继续在后台执行
+          setExecutingTaskId(null);
+          setExecutingId(null);
+          message.info('任务在后台继续执行，可在执行历史中查看结果');
+        }}
         width={520}
         destroyOnClose
       >
