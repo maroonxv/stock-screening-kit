@@ -1,10 +1,17 @@
 """Flask 应用入口"""
 import os
+import logging
 from flask import Flask, jsonify
 from flask_cors import CORS
 
 from config import config
 from extensions import db, migrate, socketio
+
+# 配置全局日志级别为 DEBUG 以便调试
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s %(levelname)s [%(name)s] %(message)s'
+)
 
 
 def create_app(config_name=None):

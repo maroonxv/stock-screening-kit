@@ -11,6 +11,9 @@ from typing import Callable
 
 logger = logging.getLogger(__name__)
 
+# 设置日志级别为 DEBUG 以便调试
+logger.setLevel(logging.DEBUG)
+
 
 class BackgroundExecutor:
     """后台任务执行器（单例）"""
@@ -32,10 +35,17 @@ class BackgroundExecutor:
 
     def submit(self, task_id: str, fn: Callable, *args, **kwargs) -> None:
         """提交任务到线程池"""
+        logger.info(f"[DEBUG] BackgroundExecutor.submit 被调用, task_id={task_id}")
+        logger.info(f"[DEBUG] 当前活跃任务数: {len(self._tasks)}")
+        
         future = self._executor.submit(fn, *args, **kwargs)
         self._tasks[task_id] = future
+        logger.info(f"[DEBUG] 任务已提交到线程池, task_id={task_id}")
 
         def cleanup(f):
+            logger.info(f"[DEBUG] 任务完成回调, task_id={task_id}")
+            if f.exception():
+                logger.error(f"[DEBUG] 任务执行异常: {f.exception()}")
             self._tasks.pop(task_id, None)
 
         future.add_done_callback(cleanup)

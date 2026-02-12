@@ -7,6 +7,9 @@ from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
+# 设置日志级别为 DEBUG 以便调试
+logger.setLevel(logging.DEBUG)
+
 
 class ScreeningWebSocketEmitter:
     """筛选上下文 WebSocket 事件推送器"""
@@ -52,10 +55,13 @@ class ScreeningWebSocketEmitter:
         })
 
     def _emit(self, event: str, data: Dict[str, Any]) -> None:
+        logger.info(f"[DEBUG] WebSocket _emit 被调用: event={event}, data={data}")
         if self._socketio is None:
-            logger.debug("WebSocket 未配置，跳过事件: %s", event)
+            logger.warning("[DEBUG] WebSocket 未配置 (socketio is None)，跳过事件: %s", event)
             return
         try:
+            logger.info(f"[DEBUG] 正在发送 WebSocket 事件: {event} 到 namespace={self.NAMESPACE}")
             self._socketio.emit(event, data, namespace=self.NAMESPACE)
+            logger.info(f"[DEBUG] WebSocket 事件发送成功: {event}")
         except Exception as e:
-            logger.error("WebSocket 推送失败: event=%s, error=%s", event, str(e))
+            logger.error("[DEBUG] WebSocket 推送失败: event=%s, error=%s", event, str(e))

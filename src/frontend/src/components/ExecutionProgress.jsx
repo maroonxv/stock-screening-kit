@@ -2,10 +2,11 @@
  * 策略执行进度组件
  *
  * 通过 WebSocket 实时显示策略执行进度，支持取消操作。
+ * 当 WebSocket 不可用时，自动回退到 REST API 轮询。
  *
  * Requirements: 7.3, 7.4, 7.5, 7.6
  */
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Progress, Card, Typography, Button, Space, Alert } from 'antd';
 import {
   LoadingOutlined,
@@ -26,6 +27,8 @@ const PHASE_LABELS = {
   save: '保存结果',
 };
 
+const POLL_INTERVAL = 2000; // 轮询间隔 2 秒
+
 function ExecutionProgress({ taskId, onComplete, onFailed, onCancel }) {
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState('');
@@ -33,8 +36,48 @@ function ExecutionProgress({ taskId, onComplete, onFailed, onCancel }) {
   const [status, setStatus] = useState('running'); // running | completed | failed | cancelled
   const [error, setError] = useState(null);
   const [cancelling, setCancelling] = useState(false);
+  const pollTimerRef = useRef(null);
+  const statusRef = useRef('running');
+
+  // 保持 statusRef 同步
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
+
+  // 轮询任务状态
+  const pollTaskStatus = useCallback(async () => {
+    if (statusRef.current !== 'running') return;
+    try {
+      const res = await screeningApi.getTask(taskId);
+      const task = res.data;
+
+      if (task.progress !== undefined) setProgress(task.progress);
+      if (task.current_step) setPhase(task.current_step);
+
+      if (task.status === 'completed') {
+        setProgress(100);
+        setStatus('completed');
+        setMessage('执行完成');
+        onComplete?.(task.result);
+      } else if (task.status === 'failed') {
+        setStatus('failed');
+        setError(task.error_message || '执行失败');
+        setMessage(`执行失败: ${task.error_message || '未知错误'}`);
+        onFailed?.(task.error_message);
+      } else if (task.status === 'cancelled') {
+        setStatus('cancelled');
+        setMessage('任务已取消');
+      } else if (task.status === 'running') {
+        const phaseLabel = PHASE_LABELS[task.current_step] || task.current_step || '';
+        setMessage(phaseLabel ? `${phaseLabel} (${task.progress}%)` : '执行中...');
+      }
+    } catch {
+      // 轮询失败时静默忽略，下次重试
+    }
+  }, [taskId, onComplete, onFailed]);
 
   useEffect(() => {
+    // 尝试连接 WebSocket
     screeningSocket.connect();
 
     screeningSocket.subscribe(taskId, {
@@ -63,10 +106,25 @@ function ExecutionProgress({ taskId, onComplete, onFailed, onCancel }) {
       },
     });
 
+    // 同时启动轮询作为回退机制
+    pollTimerRef.current = setInterval(pollTaskStatus, POLL_INTERVAL);
+
     return () => {
       screeningSocket.unsubscribe(taskId);
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
     };
-  }, [taskId, onComplete, onFailed]);
+  }, [taskId, onComplete, onFailed, pollTaskStatus]);
+
+  // 当任务结束时停止轮询
+  useEffect(() => {
+    if (status !== 'running' && pollTimerRef.current) {
+      clearInterval(pollTimerRef.current);
+      pollTimerRef.current = null;
+    }
+  }, [status]);
 
   const handleCancel = useCallback(async () => {
     setCancelling(true);
@@ -75,7 +133,7 @@ function ExecutionProgress({ taskId, onComplete, onFailed, onCancel }) {
       setStatus('cancelled');
       setMessage('任务已取消');
       onCancel?.();
-    } catch (err) {
+    } catch {
       // ignore cancel errors
     } finally {
       setCancelling(false);
