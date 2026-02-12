@@ -58,8 +58,8 @@
   - 运行所有单元测试，确保通过
   - 如有问题，询问用户
 
-- [ ] 4. 应用层实现
-  - [ ] 4.1 实现 AsyncExecutionService
+- [x] 4. 应用层实现
+  - [x] 4.1 实现 AsyncExecutionService
     - 创建 `contexts/screening/application/services/async_execution_service.py`
     - 实现 start_execution、_execute_task、get_task、list_tasks、cancel_task 方法
     - 实现带进度报告的 _fetch_stocks_with_progress 和 _filter_with_progress
@@ -69,32 +69,32 @@
     - **Property 6: 进度更新结构完整性测试**
     - **Validates: Requirements 5.2, 5.3, 5.4**
 
-- [ ] 5. 接口层实现
-  - [ ] 5.1 实现 TaskResponse DTO
+- [x] 5. 接口层实现
+  - [x] 5.1 实现 TaskResponse DTO
     - 创建 `contexts/screening/interface/dto/task_dto.py`
     - _Requirements: 2.2_
-  - [ ] 5.2 实现 TaskController
+  - [x] 5.2 实现 TaskController
     - 创建 `contexts/screening/interface/controllers/task_controller.py`
     - 实现 GET /tasks、GET /tasks/<id>、POST /tasks/<id>/cancel 端点
     - _Requirements: 2.2, 2.3, 2.4, 2.7_
-  - [ ] 5.3 修改 StrategyController 的 execute 端点
+  - [x] 5.3 修改 StrategyController 的 execute 端点
     - 修改为异步模式，返回 202 + task_id
     - _Requirements: 2.1, 2.5, 2.6_
-  - [ ] 5.4 注册 WebSocket 命名空间和蓝图
+  - [x] 5.4 注册 WebSocket 命名空间和蓝图
     - 在 app.py 中注册 /screening 命名空间
     - 注册 task_bp 蓝图
     - 初始化 AsyncExecutionService 依赖
     - _Requirements: 4.1_
 
-- [ ] 6. Checkpoint - 确保后端 API 测试通过
+- [x] 6. Checkpoint - 确保后端 API 测试通过
   - 运行集成测试，确保 API 正常工作
   - 如有问题，询问用户
 
-- [ ] 7. 配置更新
-  - [ ] 7.1 更新 Nginx 配置
+- [x] 7. 配置更新
+  - [x] 7.1 更新 Nginx 配置
     - 修改 deploy/nginx.conf，增加 /api/ 的超时配置
     - _Requirements: 6.1, 6.2, 6.3_
-  - [ ] 7.2 添加服务启动时的任务状态恢复逻辑
+  - [x] 7.2 添加服务启动时的任务状态恢复逻辑
     - 在 app.py 中添加启动钩子，将 RUNNING 任务标记为 FAILED
     - _Requirements: 8.3_
 

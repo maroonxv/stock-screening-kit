@@ -74,12 +74,37 @@ def create_app(config_name=None):
     # 注册错误处理器
     register_error_handlers(app)
     
+    # 服务启动时恢复中断的任务状态
+    _recover_interrupted_tasks(app)
+    
     # 健康检查端点
     @app.route('/health')
     def health_check():
         return jsonify({'status': 'healthy'}), 200
     
     return app
+
+
+def _recover_interrupted_tasks(app):
+    """服务启动时将所有 RUNNING 状态的任务标记为 FAILED
+
+    Requirements: 8.3
+    """
+    with app.app_context():
+        from contexts.screening.infrastructure.persistence.repositories.execution_task_repository_impl import (
+            ExecutionTaskRepositoryImpl,
+        )
+        repo = ExecutionTaskRepositoryImpl(db.session)
+        running_tasks = repo.find_running_tasks()
+        for task in running_tasks:
+            task.fail("服务重启，任务中断")
+            repo.save(task)
+        if running_tasks:
+            db.session.commit()
+            import logging
+            logging.getLogger(__name__).info(
+                "已将 %d 个中断的 RUNNING 任务标记为 FAILED", len(running_tasks)
+            )
 
 
 def register_blueprints(app):
@@ -97,6 +122,10 @@ def register_blueprints(app):
         watchlist_bp,
         init_watchlist_controller
     )
+    from contexts.screening.interface.controllers.task_controller import (
+        task_bp,
+        init_task_controller
+    )
     
     # 导入并注册 intelligence context 的 controllers
     from contexts.intelligence.interface.controllers.intelligence_controller import (
@@ -105,9 +134,13 @@ def register_blueprints(app):
     )
     
     # 初始化控制器依赖
-    init_strategy_controller(lambda: get_strategy_service(app))
+    init_strategy_controller(
+        lambda: get_strategy_service(app),
+        lambda: get_execution_service(app),
+    )
     init_session_controller(lambda: get_session_repo(app))
     init_watchlist_controller(lambda: get_watchlist_service(app))
+    init_task_controller(lambda: get_execution_service(app))
     
     # 初始化 intelligence 控制器依赖
     init_intelligence_controller(get_intelligence_service(app))
@@ -116,6 +149,7 @@ def register_blueprints(app):
     app.register_blueprint(strategy_bp)
     app.register_blueprint(session_bp)
     app.register_blueprint(watchlist_bp)
+    app.register_blueprint(task_bp)
     app.register_blueprint(intelligence_bp)
 
 
@@ -198,6 +232,66 @@ def get_session_repo(app):
     
     session = db.session
     return ScreeningSessionRepositoryImpl(session)
+
+
+def get_execution_service(app):
+    """
+    创建并返回 AsyncExecutionService 实例
+    
+    Args:
+        app: Flask 应用实例
+        
+    Returns:
+        AsyncExecutionService 实例
+    """
+    from contexts.screening.application.services.async_execution_service import (
+        AsyncExecutionService
+    )
+    from contexts.screening.infrastructure.persistence.repositories.screening_strategy_repository_impl import (
+        ScreeningStrategyRepositoryImpl
+    )
+    from contexts.screening.infrastructure.persistence.repositories.screening_session_repository_impl import (
+        ScreeningSessionRepositoryImpl
+    )
+    from contexts.screening.infrastructure.persistence.repositories.execution_task_repository_impl import (
+        ExecutionTaskRepositoryImpl
+    )
+    from contexts.screening.infrastructure.services.scoring_service_impl import (
+        ScoringServiceImpl
+    )
+    from contexts.screening.infrastructure.services.indicator_calculation_service_impl import (
+        IndicatorCalculationServiceImpl
+    )
+    from contexts.screening.infrastructure.services.background_executor import (
+        BackgroundExecutor
+    )
+    from contexts.screening.interface.websocket.screening_ws_emitter import (
+        ScreeningWebSocketEmitter
+    )
+    from shared_kernel.infrastructure.akshare_market_data_repository import (
+        AKShareMarketDataRepository
+    )
+
+    session = db.session
+    task_repo = ExecutionTaskRepositoryImpl(session)
+    strategy_repo = ScreeningStrategyRepositoryImpl(session)
+    session_repo = ScreeningSessionRepositoryImpl(session)
+    scoring_service = ScoringServiceImpl()
+    calc_service = IndicatorCalculationServiceImpl()
+    market_data_repo = AKShareMarketDataRepository(max_workers=5)
+    executor = BackgroundExecutor()
+    ws_emitter = ScreeningWebSocketEmitter(socketio=socketio)
+
+    return AsyncExecutionService(
+        task_repo=task_repo,
+        strategy_repo=strategy_repo,
+        session_repo=session_repo,
+        market_data_repo=market_data_repo,
+        scoring_service=scoring_service,
+        calc_service=calc_service,
+        executor=executor,
+        ws_emitter=ws_emitter,
+    )
 
 
 def get_watchlist_service(app):
@@ -324,7 +418,9 @@ def register_error_handlers(app):
         DomainError, ValidationError, DuplicateNameError,
         StrategyNotFoundError, WatchListNotFoundError,
         StockNotFoundError, DuplicateStockError,
-        ScoringError, IndicatorCalculationError
+        ScoringError, IndicatorCalculationError,
+        InvalidTaskStateError as ScreeningInvalidTaskStateError,
+        TaskNotFoundError as ScreeningTaskNotFoundError,
     )
     
     # 导入 Intelligence Context 的异常
@@ -373,6 +469,16 @@ def register_error_handlers(app):
     @app.errorhandler(DomainError)
     def handle_domain_error(error):
         return jsonify({'error': str(error)}), 500
+    
+    # === Screening Context 任务相关错误处理器 ===
+    
+    @app.errorhandler(ScreeningInvalidTaskStateError)
+    def handle_screening_invalid_task_state_error(error):
+        return jsonify({'error': str(error)}), 409
+    
+    @app.errorhandler(ScreeningTaskNotFoundError)
+    def handle_screening_task_not_found_error(error):
+        return jsonify({'error': str(error)}), 404
     
     # === Intelligence Context 错误处理器 ===
     # 根据设计文档的错误处理映射表：

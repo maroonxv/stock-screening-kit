@@ -27,6 +27,7 @@ from ..dto.strategy_dto import (
     ScreeningResultResponse,
 )
 from ...application.services.screening_strategy_service import ScreeningStrategyService
+from ...application.services.async_execution_service import AsyncExecutionService
 from ...domain.exceptions import (
     DuplicateNameError,
     StrategyNotFoundError,
@@ -44,17 +45,23 @@ strategy_bp = Blueprint(
 
 # 服务实例获取函数（用于依赖注入）
 _get_strategy_service: Optional[Callable[[], ScreeningStrategyService]] = None
+_get_execution_service: Optional[Callable[[], AsyncExecutionService]] = None
 
 
-def init_strategy_controller(get_service_func: Callable[[], ScreeningStrategyService]) -> None:
+def init_strategy_controller(
+    get_service_func: Callable[[], ScreeningStrategyService],
+    get_execution_service_func: Optional[Callable[[], AsyncExecutionService]] = None,
+) -> None:
     """
     初始化控制器的服务依赖
     
     Args:
         get_service_func: 返回 ScreeningStrategyService 实例的函数
+        get_execution_service_func: 返回 AsyncExecutionService 实例的函数
     """
-    global _get_strategy_service
+    global _get_strategy_service, _get_execution_service
     _get_strategy_service = get_service_func
+    _get_execution_service = get_execution_service_func
 
 
 def get_strategy_service() -> ScreeningStrategyService:
@@ -300,38 +307,30 @@ def delete_strategy(strategy_id: str):
 @strategy_bp.route('/<strategy_id>/execute', methods=['POST'])
 def execute_strategy(strategy_id: str):
     """
-    执行筛选策略
+    异步执行筛选策略
     
     Path Parameters:
         strategy_id: 策略 UUID
     
     Returns:
-        200: 执行成功，返回筛选结果
-        {
-            "matched_stocks": [...],
-            "total_scanned": 扫描总数,
-            "matched_count": 匹配数量,
-            "match_rate": 匹配率,
-            "execution_time": 执行时间,
-            "filters_applied": {...},
-            "scoring_config": {...},
-            "timestamp": "执行时间戳"
-        }
+        202: 任务已创建，返回 task_id
         404: 策略不存在
     
-    Requirements: 8.6
+    Requirements: 2.1, 2.5, 2.6
     """
     try:
-        # 调用服务执行策略
-        service = get_strategy_service()
-        result = service.execute_strategy(strategy_id)
+        if _get_execution_service is None:
+            return jsonify({'error': '异步执行服务未初始化'}), 500
         
-        # 转换为响应 DTO
-        response = ScreeningResultResponse.from_domain(result)
-        return jsonify(response.to_dict()), 200
+        execution_service = _get_execution_service()
+        task = execution_service.start_execution(strategy_id)
+        return jsonify({
+            'task_id': task.task_id,
+            'status': task.status.value,
+            'message': '任务已提交，请通过 WebSocket 或轮询获取进度',
+        }), 202
         
     except ValueError as e:
-        # 无效的 UUID 格式
         return jsonify({'error': f'无效的策略 ID: {strategy_id}'}), 400
     except StrategyNotFoundError as e:
         return jsonify({'error': str(e)}), 404
