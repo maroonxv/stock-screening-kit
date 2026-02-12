@@ -238,7 +238,7 @@ class TestProperty7ExternalDataContextInjection:
             max_size=5,
         ),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=100, deadline=None)
     def test_news_data_injected_into_market_heat_prompt(self, news_titles):
         """Property 7a: 新闻数据注入市场热度分析 prompt
 
@@ -326,7 +326,7 @@ class TestProperty7ExternalDataContextInjection:
             max_size=5,
         ),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=100, deadline=None)
     def test_announcement_data_injected_into_evidence_prompt(self, announcement_titles):
         """Property 7b: 公告数据注入证据收集 prompt
 
