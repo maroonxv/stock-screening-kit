@@ -15,6 +15,7 @@ import axios from 'axios';
  * WebSocket 事件：
  * - task_progress - 任务进度更新
  * - task_completed - 任务完成通知
+ * - task_failed - 任务失败通知
  * 
  * Requirements: 9.1-9.6
  */
@@ -146,6 +147,7 @@ let socket = null;
 const eventCallbacks = {
   task_progress: [],
   task_completed: [],
+  task_failed: [],
   connect: [],
   disconnect: [],
   error: [],
@@ -231,6 +233,12 @@ export async function connectWebSocket(options = {}) {
       socket.on('task_completed', (data) => {
         console.log('[WebSocket] Task completed:', data);
         eventCallbacks.task_completed.forEach(cb => cb(data));
+      });
+
+      // 任务失败事件
+      socket.on('task_failed', (data) => {
+        console.log('[WebSocket] Task failed:', data);
+        eventCallbacks.task_failed.forEach(cb => cb(data));
       });
 
     } catch (error) {
@@ -343,6 +351,40 @@ export function onTaskCompleted(callback) {
     const index = eventCallbacks.task_completed.indexOf(callback);
     if (index > -1) {
       eventCallbacks.task_completed.splice(index, 1);
+    }
+  };
+}
+
+/**
+ * 订阅任务失败事件
+ * 
+ * @param {Function} callback - 回调函数，接收失败数据
+ * @returns {Function} 取消订阅函数
+ * 
+ * @typedef {Object} TaskFailedData
+ * @property {string} task_id - 任务 ID
+ * @property {string} error - 错误信息
+ * 
+ * @example
+ * const unsubscribe = onTaskFailed((data) => {
+ *   console.log(`Task ${data.task_id} failed: ${data.error}`);
+ * });
+ * 
+ * // 取消订阅
+ * unsubscribe();
+ */
+export function onTaskFailed(callback) {
+  if (typeof callback !== 'function') {
+    throw new Error('callback must be a function');
+  }
+  
+  eventCallbacks.task_failed.push(callback);
+  
+  // 返回取消订阅函数
+  return () => {
+    const index = eventCallbacks.task_failed.indexOf(callback);
+    if (index > -1) {
+      eventCallbacks.task_failed.splice(index, 1);
     }
   };
 }
@@ -475,6 +517,7 @@ export const intelligenceWebSocket = {
   isConnected: isWebSocketConnected,
   onTaskProgress,
   onTaskCompleted,
+  onTaskFailed,
   onConnect,
   onDisconnect,
   onError,
