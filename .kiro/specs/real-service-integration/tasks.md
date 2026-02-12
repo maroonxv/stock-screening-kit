@@ -42,7 +42,7 @@
     - **Validates: Requirements 1.1**
 
 - [ ] 3. 改造 CredibilityVerificationPage 接入真实 API 和 WebSocket
-  - [~] 3.1 重写 `src/frontend/src/pages/CredibilityVerificationPage.jsx` 的 `handleSubmit` 函数
+  - [-] 3.1 重写 `src/frontend/src/pages/CredibilityVerificationPage.jsx` 的 `handleSubmit` 函数
     - 导入 `intelligenceApi`、`connectWebSocket`、`joinTaskRoom`、`leaveTaskRoom`、`onTaskProgress`、`onTaskCompleted`、`onTaskFailed`、`disconnectWebSocket`
     - 将 `handleSubmit` 改为 `async` 函数
     - 调用 `intelligenceApi.createCredibilityVerification(stockCode, concept)` 获取 `task_id`

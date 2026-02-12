@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Card,
   Input,
@@ -28,6 +28,16 @@ import {
   NodeIndexOutlined,
 } from '@ant-design/icons';
 import AgentProgressSteps from '../components/AgentProgressSteps';
+import {
+  intelligenceApi,
+  connectWebSocket,
+  disconnectWebSocket,
+  joinTaskRoom,
+  leaveTaskRoom,
+  onTaskProgress,
+  onTaskCompleted,
+  onTaskFailed,
+} from '../services/intelligenceApi';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -67,11 +77,12 @@ function CredibilityVerificationPage() {
   
   // 状态管理
   const [taskStatus, setTaskStatus] = useState(TaskStatus.IDLE);
-  const [, setTaskId] = useState(null);
+  const [taskId, setTaskId] = useState(null);
   const [progress, setProgress] = useState(0);
   const [agentSteps, setAgentSteps] = useState([]);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const taskIdRef = useRef(null);
 
   // 验证股票代码格式
   const validateStockCode = (_, value) => {
@@ -84,55 +95,10 @@ function CredibilityVerificationPage() {
     return Promise.resolve();
   };
 
-  // 模拟任务执行进度（临时实现，实际将通过 WebSocket 接收）
-  const simulateTaskProgress = useCallback(() => {
-    let currentIndex = 0;
-    const steps = [];
-
-    const runNextAgent = () => {
-      if (currentIndex >= CREDIBILITY_AGENTS.length) {
-        // 所有 Agent 完成，生成模拟结果
-        setProgress(100);
-        setResult(getMockResult(form.getFieldValue('stockCode'), form.getFieldValue('concept')));
-        setTaskStatus(TaskStatus.COMPLETED);
-        return;
-      }
-
-      const agentName = CREDIBILITY_AGENTS[currentIndex].name;
-      
-      // 设置当前 Agent 为 running
-      steps.push({
-        agent_name: agentName,
-        status: 'running',
-        started_at: new Date().toISOString(),
-      });
-      setAgentSteps([...steps]);
-      setProgress(Math.round((currentIndex / CREDIBILITY_AGENTS.length) * 100));
-
-      // 模拟执行时间
-      setTimeout(() => {
-        // 更新当前 Agent 为 completed
-        steps[steps.length - 1] = {
-          ...steps[steps.length - 1],
-          status: 'completed',
-          completed_at: new Date().toISOString(),
-          output_summary: `${agentName}分析完成`,
-        };
-        setAgentSteps([...steps]);
-        
-        currentIndex++;
-        runNextAgent();
-      }, 1500);
-    };
-
-    runNextAgent();
-  }, [form]);
-
-  // 提交验证
+  // 提交验证 — 调用真实后端 API
   const handleSubmit = useCallback(async (values) => {
     const { stockCode, concept } = values;
 
-    // 重置状态
     setTaskStatus(TaskStatus.PENDING);
     setProgress(0);
     setAgentSteps([]);
@@ -140,65 +106,77 @@ function CredibilityVerificationPage() {
     setError(null);
 
     try {
-      // TODO: 实际 API 调用将在 Task 13.4 中实现
-      // const response = await intelligenceApi.createCredibilityVerification({ 
-      //   stock_code: stockCode, 
-      //   concept 
-      // });
-      // setTaskId(response.data.task_id);
-      
-      // 模拟任务创建
-      const mockTaskId = `task-${Date.now()}`;
-      setTaskId(mockTaskId);
+      const response = await intelligenceApi.createCredibilityVerification(stockCode, concept);
+      const newTaskId = response.data.task_id;
+      setTaskId(newTaskId);
+      taskIdRef.current = newTaskId;
       setTaskStatus(TaskStatus.RUNNING);
-      
-      // 模拟任务执行进度（实际将通过 WebSocket 接收）
-      simulateTaskProgress();
-      
+
+      await connectWebSocket();
+      joinTaskRoom(newTaskId);
     } catch (err) {
       setError(err.response?.data?.error || err.message || '创建任务失败');
       setTaskStatus(TaskStatus.FAILED);
     }
-  }, [simulateTaskProgress]);
+  }, []);
 
-  // 模拟结果数据
-  const getMockResult = (stockCode, concept) => ({
-    stock_code: stockCode || '600519.SH',
-    stock_name: '贵州茅台',
-    concept: concept || 'AI+白酒',
-    overall_score: { score: 15, level: '低可信度' },
-    main_business_match: {
-      score: 5,
-      main_business_description: '白酒生产与销售，主要产品为茅台酒系列',
-      match_analysis: '公司主营业务为白酒生产与销售，与 AI 技术无直接关联。虽然公司可能在生产管理中使用信息化系统，但这并不构成 AI 概念的实质性业务。',
-    },
-    evidence: {
-      score: 10,
-      patents: [],
-      orders: [],
-      partnerships: [],
-      analysis: '未发现公司在 AI 领域的专利申请、订单或战略合作。公司公告和年报中未提及 AI 相关业务布局。',
-    },
-    hype_history: {
-      score: 30,
-      past_concepts: ['元宇宙', '区块链', '大数据'],
-      analysis: '公司历史上曾被市场关联过多个热点概念，包括元宇宙、区块链等，但均未有实质性业务落地。存在一定的蹭热点历史。',
-    },
-    supply_chain_logic: {
-      score: 5,
-      upstream: ['高粱', '小麦', '包装材料'],
-      downstream: ['经销商', '零售终端', '电商平台'],
-      analysis: '公司供应链主要涉及农产品原料和消费品销售渠道，与 AI 技术的供应链（芯片、算力、数据）无逻辑关联。',
-    },
-    risk_labels: ['pure_hype', 'business_mismatch', 'weak_evidence'],
-    conclusion: '综合分析显示，该公司声称的 AI+白酒 概念可信度极低。公司主营业务与 AI 无关，未发现实质性证据支持，且存在历史蹭热点记录。投资者应警惕此类概念炒作风险。',
-  });
+  // WebSocket 事件订阅
+  useEffect(() => {
+    if (!taskId || taskStatus !== TaskStatus.RUNNING) return;
+
+    const unsubProgress = onTaskProgress((data) => {
+      if (data.task_id !== taskIdRef.current) return;
+      setProgress(data.progress);
+      setAgentSteps((prev) => {
+        const updated = [...prev];
+        const idx = updated.findIndex((s) => s.agent_name === data.agent_step.agent_name);
+        if (idx >= 0) updated[idx] = data.agent_step;
+        else updated.push(data.agent_step);
+        return updated;
+      });
+    });
+
+    const unsubCompleted = onTaskCompleted((data) => {
+      if (data.task_id !== taskIdRef.current) return;
+      setProgress(100);
+      setResult(data.result);
+      setTaskStatus(TaskStatus.COMPLETED);
+      leaveTaskRoom(taskIdRef.current);
+    });
+
+    const unsubFailed = onTaskFailed((data) => {
+      if (data.task_id !== taskIdRef.current) return;
+      setError(data.error);
+      setTaskStatus(TaskStatus.FAILED);
+      leaveTaskRoom(taskIdRef.current);
+    });
+
+    return () => {
+      unsubProgress();
+      unsubCompleted();
+      unsubFailed();
+    };
+  }, [taskId, taskStatus]);
+
+  // 组件卸载时清理 WebSocket
+  useEffect(() => {
+    return () => {
+      if (taskIdRef.current) {
+        leaveTaskRoom(taskIdRef.current);
+      }
+      disconnectWebSocket();
+    };
+  }, []);
 
   // 重新开始
   const handleReset = () => {
+    if (taskIdRef.current) {
+      leaveTaskRoom(taskIdRef.current);
+    }
     form.resetFields();
     setTaskStatus(TaskStatus.IDLE);
     setTaskId(null);
+    taskIdRef.current = null;
     setProgress(0);
     setAgentSteps([]);
     setResult(null);
