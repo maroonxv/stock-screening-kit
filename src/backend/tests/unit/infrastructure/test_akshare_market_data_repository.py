@@ -19,10 +19,10 @@ class TestAKShareMarketDataRepository:
     
     @pytest.fixture
     def mock_stock_list_df(self):
-        """模拟股票列表数据"""
+        """模拟股票列表数据（仅沪深两市，不含北交所）"""
         return pd.DataFrame({
-            'code': ['600000', '000001', '300001', '830001'],
-            'name': ['浦发银行', '平安银行', '特锐德', '北京股票']
+            'code': ['600000', '000001', '300001'],
+            'name': ['浦发银行', '平安银行', '特锐德']
         })
     
     @pytest.fixture
@@ -75,20 +75,20 @@ class TestAKShareMarketDataRepository:
         assert result.code == '300001.SZ'
     
     def test_convert_bj_stock_code_8(self):
-        """测试北京股票代码转换（8开头）"""
+        """测试北京股票代码转换（8开头）- 当前系统不支持北交所"""
         repo = AKShareMarketDataRepository()
         result = repo._convert_to_stock_code('830001')
         
-        assert result is not None
-        assert result.code == '830001.BJ'
+        # 北交所股票会被过滤掉（StockCode 不支持 .BJ）
+        assert result is None
     
     def test_convert_bj_stock_code_4(self):
-        """测试北京股票代码转换（4开头）"""
+        """测试北京股票代码转换（4开头）- 当前系统不支持北交所"""
         repo = AKShareMarketDataRepository()
         result = repo._convert_to_stock_code('430001')
         
-        assert result is not None
-        assert result.code == '430001.BJ'
+        # 北交所股票会被过滤掉（StockCode 不支持 .BJ）
+        assert result is None
     
     def test_convert_invalid_stock_code(self):
         """测试无效股票代码转换"""
@@ -116,11 +116,10 @@ class TestAKShareMarketDataRepository:
         repo = AKShareMarketDataRepository()
         codes = repo.get_all_stock_codes()
         
-        assert len(codes) == 4
+        assert len(codes) == 3
         assert any(c.code == '600000.SH' for c in codes)
         assert any(c.code == '000001.SZ' for c in codes)
         assert any(c.code == '300001.SZ' for c in codes)
-        assert any(c.code == '830001.BJ' for c in codes)
     
     @patch('shared_kernel.infrastructure.akshare_market_data_repository.ak')
     def test_get_all_stock_codes_caches_result(self, mock_ak, mock_stock_list_df):
