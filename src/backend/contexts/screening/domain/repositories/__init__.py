@@ -9,15 +9,18 @@
 - IScreeningSessionRepository: 筛选会话仓储接口
 - IWatchListRepository: 自选股列表仓储接口
 - IHistoricalDataProvider: 历史数据提供者接口
+- IExecutionTaskRepository: 执行任务仓储接口
 """
 from .screening_strategy_repository import IScreeningStrategyRepository
 from .screening_session_repository import IScreeningSessionRepository
 from .watchlist_repository import IWatchListRepository
 from .historical_data_provider import IHistoricalDataProvider
+from .execution_task_repository import IExecutionTaskRepository
 
 __all__ = [
     'IScreeningStrategyRepository',
     'IScreeningSessionRepository',
     'IWatchListRepository',
     'IHistoricalDataProvider',
+    'IExecutionTaskRepository',
 ]

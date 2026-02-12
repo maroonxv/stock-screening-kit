@@ -297,5 +297,5 @@ class TestExceptionHierarchy:
             and issubclass(getattr(exceptions, name), Exception)
             and name != 'Exception'
         ]
-        assert len(exception_classes) == 9, \
-            f"应该有 9 个异常类，实际有 {len(exception_classes)} 个"
+        assert len(exception_classes) == 11, \
+            f"应该有 11 个异常类，实际有 {len(exception_classes)} 个"

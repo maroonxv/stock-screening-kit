@@ -42,6 +42,7 @@ def create_app(config_name=None):
             ScreeningStrategyPO,
             ScreeningSessionPO,
             WatchListPO,
+            ExecutionTaskPO,
         )
         # 导入 Intelligence Context 的 PO 模型
         from contexts.intelligence.infrastructure.persistence.models.investigation_task_po import (

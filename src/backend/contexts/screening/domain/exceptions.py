@@ -44,3 +44,13 @@ class IndicatorCalculationError(DomainError):
 class ValidationError(DomainError):
     """通用验证错误"""
     pass
+
+
+class InvalidTaskStateError(DomainError):
+    """非法任务状态转换"""
+    pass
+
+
+class TaskNotFoundError(DomainError):
+    """执行任务不存在"""
+    pass

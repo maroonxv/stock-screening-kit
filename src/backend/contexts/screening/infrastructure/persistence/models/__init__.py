@@ -9,10 +9,12 @@ from app import db
 from .screening_strategy_po import ScreeningStrategyPO
 from .screening_session_po import ScreeningSessionPO
 from .watchlist_po import WatchListPO
+from .execution_task_po import ExecutionTaskPO
 
 __all__ = [
     'db',
     'ScreeningStrategyPO',
     'ScreeningSessionPO',
     'WatchListPO',
+    'ExecutionTaskPO',
 ]
