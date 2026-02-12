@@ -49,6 +49,10 @@ from contexts.intelligence.infrastructure.ai.agent_retry import (
     DEFAULT_RETRY_CONFIG,
     execute_agent_with_retry,
 )
+from contexts.intelligence.domain.repositories.news_data_provider import (
+    INewsDataProvider,
+    NewsItem,
+)
 from contexts.intelligence.infrastructure.ai.deepseek_client import (
     ChatMessage,
     DeepSeekClient,
@@ -181,13 +185,41 @@ def _build_market_heat_node(
     deepseek_client: DeepSeekClient,
     retry_config: Optional[AgentRetryConfig] = None,
     failure_callback_holder: Optional[List] = None,
+    news_provider: Optional[INewsDataProvider] = None,
 ):
-    """构建 Agent 2: 市场热度分析 节点函数（支持失败重试）"""
+    """构建 Agent 2: 市场热度分析 节点函数（支持失败重试）
+
+    Args:
+        deepseek_client: DeepSeek LLM 客户端
+        retry_config: Agent 重试配置
+        failure_callback_holder: 失败回调持有者
+        news_provider: 可选的新闻数据提供者，用于注入真实新闻上下文增强分析质量
+    """
 
     async def _market_heat_core(state: IndustryResearchState) -> dict:
         """Agent 2 核心逻辑：分析行业市场热度"""
         query = state["query"]
         industry_summary = state.get("industry_summary", "")
+
+        # 尝试获取新闻数据作为上下文
+        news_context = ""
+        if news_provider is not None:
+            try:
+                news_items = news_provider.fetch_news(query, days=7)
+                if news_items:
+                    formatted_items = []
+                    for item in news_items:
+                        published_str = item.published_at.strftime("%Y-%m-%d") if item.published_at else "未知日期"
+                        formatted_items.append(
+                            f"- [{published_str}] {item.title}（来源：{item.source}）\n  摘要：{item.summary}"
+                        )
+                    news_context = (
+                        "\n\n以下是近期相关新闻数据，请结合这些真实新闻进行分析：\n"
+                        + "\n".join(formatted_items)
+                    )
+                    logger.info("市场热度分析获取到 %d 条新闻数据", len(news_items))
+            except Exception as e:
+                logger.warning("获取新闻数据失败，降级为仅使用 LLM 知识: %s", str(e))
 
         prompt = (
             f"你是一位市场热度分析专家。请分析以下行业的当前市场热度：\n\n"
@@ -201,6 +233,7 @@ def _build_market_heat_node(
             f'  "catalysts": ["催化剂1", "催化剂2", ...]\n'
             f'}}\n\n'
             f"请确保 heat_score 是 0-100 的整数，返回有效的 JSON 格式。"
+            f"{news_context}"
         )
 
         messages = [
@@ -523,6 +556,7 @@ def build_industry_research_workflow(
     checkpointer=None,
     retry_config: Optional[AgentRetryConfig] = None,
     failure_callback_holder: Optional[List] = None,
+    news_provider: Optional[INewsDataProvider] = None,
 ):
     """构建快速行业认知 LangGraph 工作流
 
@@ -533,6 +567,7 @@ def build_industry_research_workflow(
         retry_config: Agent 重试配置，为 None 时使用默认配置
         failure_callback_holder: 可变列表 [callback]，用于在运行时注入失败回调。
                                  Agent 节点通过闭包捕获此列表，在执行时读取 [0] 元素。
+        news_provider: 可选的新闻数据提供者，注入到市场热度分析 Agent 以增强分析质量
 
     Returns:
         编译后的 LangGraph 工作流（CompiledGraph）
@@ -541,7 +576,7 @@ def build_industry_research_workflow(
 
     # 添加 Agent 节点（每个节点支持失败重试）
     workflow.add_node("industry_overview", _build_industry_overview_node(deepseek_client, retry_config, failure_callback_holder))
-    workflow.add_node("market_heat", _build_market_heat_node(deepseek_client, retry_config, failure_callback_holder))
+    workflow.add_node("market_heat", _build_market_heat_node(deepseek_client, retry_config, failure_callback_holder, news_provider=news_provider))
     workflow.add_node("stock_screening", _build_stock_screening_node(deepseek_client, retry_config, failure_callback_holder))
     workflow.add_node("credibility_batch", _build_credibility_batch_node(deepseek_client, retry_config, failure_callback_holder))
     workflow.add_node("competitive_landscape", _build_competitive_landscape_node(deepseek_client, retry_config, failure_callback_holder))
@@ -617,6 +652,7 @@ class IndustryResearchWorkflowService(IIndustryResearchService):
         deepseek_client: DeepSeekClient,
         checkpointer=None,
         retry_config: Optional[AgentRetryConfig] = None,
+        news_provider: Optional[INewsDataProvider] = None,
     ):
         """初始化工作流服务
 
@@ -624,10 +660,12 @@ class IndustryResearchWorkflowService(IIndustryResearchService):
             deepseek_client: DeepSeek LLM 客户端
             checkpointer: LangGraph checkpointer（Redis 或 Memory）
             retry_config: Agent 重试配置，为 None 时使用默认配置
+            news_provider: 可选的新闻数据提供者，用于增强市场热度分析
         """
         self._deepseek_client = deepseek_client
         self._checkpointer = checkpointer
         self._retry_config = retry_config
+        self._news_provider = news_provider
         # Mutable holder for failure callback — set before each execution.
         # Agent nodes capture this list via closure and read [0] at runtime.
         self._failure_callback_holder: List = [None]
@@ -636,6 +674,7 @@ class IndustryResearchWorkflowService(IIndustryResearchService):
             checkpointer=checkpointer,
             retry_config=retry_config,
             failure_callback_holder=self._failure_callback_holder,
+            news_provider=news_provider,
         )
 
     async def execute_research(

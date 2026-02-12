@@ -14,7 +14,7 @@
     - 将 `onTaskFailed` 添加到 `intelligenceWebSocket` 对象中
     - _Requirements: 3.5_
 
-- [ ] 2. 改造 IndustryResearchPage 接入真实 API 和 WebSocket
+- [x] 2. 改造 IndustryResearchPage 接入真实 API 和 WebSocket
   - [x] 2.1 重写 `src/frontend/src/pages/IndustryResearchPage.jsx` 的 `handleSubmit` 函数
     - 导入 `intelligenceApi`、`connectWebSocket`、`joinTaskRoom`、`leaveTaskRoom`、`onTaskProgress`、`onTaskCompleted`、`onTaskFailed`、`disconnectWebSocket`
     - 将 `handleSubmit` 改为 `async` 函数
@@ -34,14 +34,14 @@
   - [x] 2.3 添加组件卸载时的 WebSocket 清理逻辑
     - 使用 `useEffect` 返回 cleanup 函数，调用 `leaveTaskRoom` 和 `disconnectWebSocket`
     - _Requirements: 3.6_
-  - [~] 2.4 编写 IndustryResearchPage 单元测试
+  - [x] 2.4 编写 IndustryResearchPage 单元测试
     - 测试提交查询后调用正确的 API
     - 测试 API 错误时展示错误信息
     - 测试 WebSocket 事件更新组件状态
     - **Property 1: 行业认知 API 调用正确性**
     - **Validates: Requirements 1.1**
 
-- [ ] 3. 改造 CredibilityVerificationPage 接入真实 API 和 WebSocket
+- [x] 3. 改造 CredibilityVerificationPage 接入真实 API 和 WebSocket
   - [x] 3.1 重写 `src/frontend/src/pages/CredibilityVerificationPage.jsx` 的 `handleSubmit` 函数
     - 导入 `intelligenceApi`、`connectWebSocket`、`joinTaskRoom`、`leaveTaskRoom`、`onTaskProgress`、`onTaskCompleted`、`onTaskFailed`、`disconnectWebSocket`
     - 将 `handleSubmit` 改为 `async` 函数
@@ -57,11 +57,11 @@
     - _Requirements: 3.2, 3.3, 3.4, 3.5_
   - [x] 3.3 添加组件卸载时的 WebSocket 清理逻辑
     - _Requirements: 3.6_
-  - [~] 3.4 编写 CredibilityVerificationPage 单元测试
+  - [x] 3.4 编写 CredibilityVerificationPage 单元测试
     - **Property 2: 可信度验证 API 调用正确性**
     - **Validates: Requirements 2.1**
 
-- [ ] 4. Checkpoint - 确保前端改造完成
+- [x] 4. Checkpoint - 确保前端改造完成
   - 确保所有测试通过，ask the user if questions arise.
 
 - [x] 5. 后端 DeepSeek API 配置验证
@@ -79,38 +79,38 @@
     - 测试 API key 为空时的 400 错误响应
     - _Requirements: 4.1, 4.2_
 
-- [ ] 6. Checkpoint - 确保后端配置验证完成
+- [x] 6. Checkpoint - 确保后端配置验证完成
   - 确保所有测试通过，ask the user if questions arise.
 
-- [ ] 7. （可选）实现 AKShare 数据源提供者
-  - [ ] 7.1 创建 `src/backend/contexts/intelligence/infrastructure/data/akshare_news_provider.py`
+- [~] 7. （可选）实现 AKShare 数据源提供者
+  - [x] 7.1 创建 `src/backend/contexts/intelligence/infrastructure/data/akshare_news_provider.py`
     - 实现 `INewsDataProvider` 接口
     - 使用 AKShare 的新闻相关 API 获取行业新闻
     - 异常时返回空列表并记录 WARNING 日志
     - _Requirements: 5.1, 5.5_
-  - [ ] 7.2 创建 `src/backend/contexts/intelligence/infrastructure/data/akshare_announcement_provider.py`
+  - [x] 7.2 创建 `src/backend/contexts/intelligence/infrastructure/data/akshare_announcement_provider.py`
     - 实现 `IAnnouncementDataProvider` 接口
     - 使用 AKShare 的公告相关 API 获取公司公告
     - 异常时返回空列表并记录 WARNING 日志
     - _Requirements: 5.2, 5.5_
-  - [ ] 7.3 改造行业认知工作流的市场热度分析 Agent，注入新闻数据上下文
+  - [x] 7.3 改造行业认知工作流的市场热度分析 Agent，注入新闻数据上下文
     - 在 `_build_market_heat_node` 中接受可选的 `INewsDataProvider` 参数
     - 获取新闻数据后拼接到 LLM prompt 中
     - 数据获取失败时降级为仅使用 LLM 知识
     - _Requirements: 5.3, 5.5_
-  - [ ] 7.4 改造可信度验证工作流的证据收集 Agent，注入公告数据上下文
+  - [~] 7.4 改造可信度验证工作流的证据收集 Agent，注入公告数据上下文
     - 在 `_build_evidence_collection_node` 中接受可选的 `IAnnouncementDataProvider` 参数
     - 获取公告数据后拼接到 LLM prompt 中
     - 数据获取失败时降级为仅使用 LLM 知识
     - _Requirements: 5.4, 5.5_
-  - [ ] 7.5 在 `app.py` 的 `get_intelligence_service` 中注入数据提供者
+  - [~] 7.5 在 `app.py` 的 `get_intelligence_service` 中注入数据提供者
     - 创建 AKShare 数据提供者实例并注入到工作流服务中
     - _Requirements: 5.1, 5.2_
-  - [ ] 7.6 编写数据提供者和工作流增强的单元测试
+  - [~] 7.6 编写数据提供者和工作流增强的单元测试
     - **Property 7: 外部数据上下文注入**
     - **Validates: Requirements 5.3, 5.4**
 
-- [ ] 8. Final checkpoint - 确保所有功能完成
+- [x] 8. Final checkpoint - 确保所有功能完成
   - 确保所有测试通过，ask the user if questions arise.
 
 ## 用户需要提供的配置
