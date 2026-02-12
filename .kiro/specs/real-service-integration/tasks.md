@@ -6,8 +6,8 @@
 
 ## Tasks
 
-- [ ] 1. 扩展 WebSocket 客户端支持 task_failed 事件
-  - [-] 1.1 在 `src/frontend/src/services/intelligenceApi.js` 中添加 `task_failed` 事件支持
+- [x] 1. 扩展 WebSocket 客户端支持 task_failed 事件
+  - [x] 1.1 在 `src/frontend/src/services/intelligenceApi.js` 中添加 `task_failed` 事件支持
     - 在 `eventCallbacks` 对象中添加 `task_failed: []`
     - 在 `connectWebSocket` 函数中添加 `socket.on('task_failed', ...)` 监听
     - 导出 `onTaskFailed` 订阅函数（与 `onTaskProgress`/`onTaskCompleted` 同模式）
@@ -15,7 +15,7 @@
     - _Requirements: 3.5_
 
 - [ ] 2. 改造 IndustryResearchPage 接入真实 API 和 WebSocket
-  - [~] 2.1 重写 `src/frontend/src/pages/IndustryResearchPage.jsx` 的 `handleSubmit` 函数
+  - [x] 2.1 重写 `src/frontend/src/pages/IndustryResearchPage.jsx` 的 `handleSubmit` 函数
     - 导入 `intelligenceApi`、`connectWebSocket`、`joinTaskRoom`、`leaveTaskRoom`、`onTaskProgress`、`onTaskCompleted`、`onTaskFailed`、`disconnectWebSocket`
     - 将 `handleSubmit` 改为 `async` 函数
     - 调用 `intelligenceApi.createIndustryResearch(trimmedQuery)` 获取 `task_id`
@@ -23,7 +23,7 @@
     - 移除 `simulateTaskProgress()` 函数和 `getMockResult()` 函数
     - 移除 `simulateTaskProgress` 的 `useCallback` 依赖
     - _Requirements: 1.1, 1.2_
-  - [~] 2.2 添加 WebSocket 事件订阅的 `useEffect`
+  - [x] 2.2 添加 WebSocket 事件订阅的 `useEffect`
     - 当 `taskId` 存在且 `taskStatus === RUNNING` 时订阅 `task_progress`、`task_completed`、`task_failed` 事件
     - `task_progress` 回调：更新 `progress` 和累积更新 `agentSteps`（已存在的 agent_name 更新，不存在的追加）
     - `task_completed` 回调：设置 `progress=100`、`result=data.result`、`taskStatus=COMPLETED`，调用 `leaveTaskRoom`
@@ -31,7 +31,7 @@
     - 所有回调需过滤 `data.task_id !== taskId` 的事件
     - cleanup 函数中取消所有订阅
     - _Requirements: 3.2, 3.3, 3.4, 3.5_
-  - [~] 2.3 添加组件卸载时的 WebSocket 清理逻辑
+  - [x] 2.3 添加组件卸载时的 WebSocket 清理逻辑
     - 使用 `useEffect` 返回 cleanup 函数，调用 `leaveTaskRoom` 和 `disconnectWebSocket`
     - _Requirements: 3.6_
   - [~] 2.4 编写 IndustryResearchPage 单元测试

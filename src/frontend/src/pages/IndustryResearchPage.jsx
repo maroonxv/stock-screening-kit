@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Card,
   Input,
@@ -26,6 +26,16 @@ import {
   SafetyCertificateOutlined,
 } from '@ant-design/icons';
 import AgentProgressSteps from '../components/AgentProgressSteps';
+import {
+  intelligenceApi,
+  connectWebSocket,
+  disconnectWebSocket,
+  joinTaskRoom,
+  leaveTaskRoom,
+  onTaskProgress,
+  onTaskCompleted,
+  onTaskFailed,
+} from '../services/intelligenceApi';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
@@ -54,73 +64,21 @@ function IndustryResearchPage() {
   // 状态管理
   const [query, setQuery] = useState('');
   const [taskStatus, setTaskStatus] = useState(TaskStatus.IDLE);
-  const [, setTaskId] = useState(null);
+  const [taskId, setTaskId] = useState(null);
   const [progress, setProgress] = useState(0);
   const [agentSteps, setAgentSteps] = useState([]);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const taskIdRef = useRef(null);
 
-  // 模拟任务执行进度（临时实现，实际将通过 WebSocket 接收）
-  const simulateTaskProgress = useCallback(() => {
-    const agents = [
-      '行业背景速览',
-      '市场热度分析',
-      '标的快速筛选',
-      '真实性批量验证',
-      '竞争格局速览',
-    ];
-
-    let currentIndex = 0;
-    const steps = [];
-
-    const runNextAgent = () => {
-      if (currentIndex >= agents.length) {
-        // 所有 Agent 完成，生成模拟结果
-        setProgress(100);
-        setResult(getMockResult());
-        setTaskStatus(TaskStatus.COMPLETED);
-        return;
-      }
-
-      const agentName = agents[currentIndex];
-      
-      // 设置当前 Agent 为 running
-      steps.push({
-        agent_name: agentName,
-        status: 'running',
-        started_at: new Date().toISOString(),
-      });
-      setAgentSteps([...steps]);
-      setProgress(Math.round((currentIndex / agents.length) * 100));
-
-      // 模拟执行时间
-      setTimeout(() => {
-        // 更新当前 Agent 为 completed
-        steps[steps.length - 1] = {
-          ...steps[steps.length - 1],
-          status: 'completed',
-          completed_at: new Date().toISOString(),
-          output_summary: `${agentName}分析完成`,
-        };
-        setAgentSteps([...steps]);
-        
-        currentIndex++;
-        runNextAgent();
-      }, 1500);
-    };
-
-    runNextAgent();
-  }, []);
-
-  // 提交查询
-  const handleSubmit = useCallback((value) => {
+  // 提交查询 — 调用真实后端 API
+  const handleSubmit = useCallback(async (value) => {
     const trimmedQuery = value?.trim() || query.trim();
     if (!trimmedQuery) {
       message.warning('请输入查询内容');
       return;
     }
 
-    // 重置状态
     setTaskStatus(TaskStatus.PENDING);
     setProgress(0);
     setAgentSteps([]);
@@ -128,72 +86,77 @@ function IndustryResearchPage() {
     setError(null);
 
     try {
-      // TODO: 实际 API 调用将在 Task 13.4 中实现
-      // const response = await intelligenceApi.createIndustryResearch({ query: trimmedQuery });
-      // setTaskId(response.data.task_id);
-      
-      // 模拟任务创建
-      const mockTaskId = `task-${Date.now()}`;
-      setTaskId(mockTaskId);
+      const response = await intelligenceApi.createIndustryResearch(trimmedQuery);
+      const newTaskId = response.data.task_id;
+      setTaskId(newTaskId);
+      taskIdRef.current = newTaskId;
       setTaskStatus(TaskStatus.RUNNING);
-      
-      // 模拟任务执行进度（实际将通过 WebSocket 接收）
-      simulateTaskProgress();
-      
+
+      await connectWebSocket();
+      joinTaskRoom(newTaskId);
     } catch (err) {
       setError(err.response?.data?.error || err.message || '创建任务失败');
       setTaskStatus(TaskStatus.FAILED);
     }
-  }, [query, simulateTaskProgress]);
+  }, [query]);
 
-  // 模拟结果数据
-  const getMockResult = () => ({
-    industry_name: '合成生物学',
-    summary: '合成生物学是一门融合生物学、工程学和计算机科学的新兴交叉学科，通过设计和构建新的生物系统或改造现有生物系统来实现特定功能。该行业正处于快速发展期，技术突破不断涌现，商业化应用逐步落地。',
-    industry_chain: '上游：基因合成、测序设备 → 中游：菌株构建、发酵工程 → 下游：医药、农业、化工、食品',
-    technology_routes: ['基因编辑技术', '代谢工程', '蛋白质设计', '细胞工厂', 'AI辅助设计'],
-    market_size: '全球市场规模约500亿美元，预计2030年将达到1500亿美元，年复合增长率约15%',
-    top_stocks: [
-      {
-        stock_code: '688399.SH',
-        stock_name: '硕世生物',
-        credibility_score: { score: 85, level: '高可信度' },
-        relevance_summary: '主营业务与合成生物学高度相关，拥有核心技术专利',
-      },
-      {
-        stock_code: '688185.SH',
-        stock_name: '康希诺',
-        credibility_score: { score: 78, level: '中可信度' },
-        relevance_summary: '疫苗研发涉及合成生物学技术应用',
-      },
-      {
-        stock_code: '300601.SZ',
-        stock_name: '康泰生物',
-        credibility_score: { score: 72, level: '中可信度' },
-        relevance_summary: '生物制品研发中应用合成生物学方法',
-      },
-    ],
-    risk_alerts: [
-      '行业处于早期阶段，商业化路径不确定',
-      '技术迭代快，研发投入大',
-      '监管政策存在不确定性',
-      '部分概念股存在蹭热点风险',
-    ],
-    catalysts: [
-      '国家政策支持生物经济发展',
-      '技术突破带来成本下降',
-      '下游应用场景持续拓展',
-      '头部企业产品获批上市',
-    ],
-    heat_score: 75,
-    competitive_landscape: '行业集中度较低，竞争格局分散。国内企业以中小型为主，头部企业正在形成。国际巨头如Ginkgo Bioworks、Zymergen等具有先发优势，国内企业在特定细分领域具有竞争力。',
-  });
+  // WebSocket 事件订阅
+  useEffect(() => {
+    if (!taskId || taskStatus !== TaskStatus.RUNNING) return;
+
+    const unsubProgress = onTaskProgress((data) => {
+      if (data.task_id !== taskIdRef.current) return;
+      setProgress(data.progress);
+      setAgentSteps((prev) => {
+        const updated = [...prev];
+        const idx = updated.findIndex((s) => s.agent_name === data.agent_step.agent_name);
+        if (idx >= 0) updated[idx] = data.agent_step;
+        else updated.push(data.agent_step);
+        return updated;
+      });
+    });
+
+    const unsubCompleted = onTaskCompleted((data) => {
+      if (data.task_id !== taskIdRef.current) return;
+      setProgress(100);
+      setResult(data.result);
+      setTaskStatus(TaskStatus.COMPLETED);
+      leaveTaskRoom(taskIdRef.current);
+    });
+
+    const unsubFailed = onTaskFailed((data) => {
+      if (data.task_id !== taskIdRef.current) return;
+      setError(data.error);
+      setTaskStatus(TaskStatus.FAILED);
+      leaveTaskRoom(taskIdRef.current);
+    });
+
+    return () => {
+      unsubProgress();
+      unsubCompleted();
+      unsubFailed();
+    };
+  }, [taskId, taskStatus]);
+
+  // 组件卸载时清理 WebSocket
+  useEffect(() => {
+    return () => {
+      if (taskIdRef.current) {
+        leaveTaskRoom(taskIdRef.current);
+      }
+      disconnectWebSocket();
+    };
+  }, []);
 
   // 重新开始
   const handleReset = () => {
+    if (taskIdRef.current) {
+      leaveTaskRoom(taskIdRef.current);
+    }
     setQuery('');
     setTaskStatus(TaskStatus.IDLE);
     setTaskId(null);
+    taskIdRef.current = null;
     setProgress(0);
     setAgentSteps([]);
     setResult(null);
