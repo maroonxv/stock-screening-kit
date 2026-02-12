@@ -48,6 +48,17 @@ class TestAKShareMarketDataRepository:
             '所属行业': ['银行']
         })
     
+    @pytest.fixture
+    def mock_indicator_df(self):
+        """模拟个股指标数据（PE、PB、总市值、股息率）"""
+        return pd.DataFrame({
+            'trade_date': ['2024-12-31'],
+            'pe_ttm': [8.5],
+            'pb': [0.65],
+            'total_mv': [350000.0],
+            'dv_ratio': [4.2],
+        })
+    
     # ==================== 股票代码转换测试 ====================
     
     def test_convert_sh_stock_code(self):
@@ -149,11 +160,12 @@ class TestAKShareMarketDataRepository:
     # ==================== 获取单只股票测试 ====================
     
     @patch('shared_kernel.infrastructure.akshare_market_data_repository.ak')
-    def test_get_stock(self, mock_ak, mock_stock_list_df, mock_financial_df, mock_profile_df):
+    def test_get_stock(self, mock_ak, mock_stock_list_df, mock_financial_df, mock_profile_df, mock_indicator_df):
         """测试获取单只股票数据"""
         mock_ak.stock_info_a_code_name.return_value = mock_stock_list_df
         mock_ak.stock_financial_analysis_indicator.return_value = mock_financial_df
         mock_ak.stock_profile_cninfo.return_value = mock_profile_df
+        mock_ak.stock_a_indicator_lg.return_value = mock_indicator_df
         
         repo = AKShareMarketDataRepository()
         stock_code = StockCode('600000.SH')
@@ -167,13 +179,18 @@ class TestAKShareMarketDataRepository:
         assert stock.eps == 1.25
         assert stock.debt_ratio == 45.0
         assert stock.industry == '银行'
+        assert stock.pe == 8.5
+        assert stock.pb == 0.65
+        assert stock.market_cap == 350000.0
+        assert stock.dividend_yield == 4.2
     
     @patch('shared_kernel.infrastructure.akshare_market_data_repository.ak')
-    def test_get_stock_caches_result(self, mock_ak, mock_stock_list_df, mock_financial_df, mock_profile_df):
+    def test_get_stock_caches_result(self, mock_ak, mock_stock_list_df, mock_financial_df, mock_profile_df, mock_indicator_df):
         """测试股票数据缓存"""
         mock_ak.stock_info_a_code_name.return_value = mock_stock_list_df
         mock_ak.stock_financial_analysis_indicator.return_value = mock_financial_df
         mock_ak.stock_profile_cninfo.return_value = mock_profile_df
+        mock_ak.stock_a_indicator_lg.return_value = mock_indicator_df
         
         repo = AKShareMarketDataRepository()
         stock_code = StockCode('600000.SH')
@@ -189,11 +206,12 @@ class TestAKShareMarketDataRepository:
     # ==================== 批量获取股票测试 ====================
     
     @patch('shared_kernel.infrastructure.akshare_market_data_repository.ak')
-    def test_get_stocks_by_codes(self, mock_ak, mock_stock_list_df, mock_financial_df, mock_profile_df):
+    def test_get_stocks_by_codes(self, mock_ak, mock_stock_list_df, mock_financial_df, mock_profile_df, mock_indicator_df):
         """测试批量获取股票数据"""
         mock_ak.stock_info_a_code_name.return_value = mock_stock_list_df
         mock_ak.stock_financial_analysis_indicator.return_value = mock_financial_df
         mock_ak.stock_profile_cninfo.return_value = mock_profile_df
+        mock_ak.stock_a_indicator_lg.return_value = mock_indicator_df
         
         repo = AKShareMarketDataRepository()
         codes = [StockCode('600000.SH'), StockCode('000001.SZ')]
@@ -203,11 +221,12 @@ class TestAKShareMarketDataRepository:
         assert len(stocks) == 2
     
     @patch('shared_kernel.infrastructure.akshare_market_data_repository.ak')
-    def test_get_stocks_by_codes_uses_cache(self, mock_ak, mock_stock_list_df, mock_financial_df, mock_profile_df):
+    def test_get_stocks_by_codes_uses_cache(self, mock_ak, mock_stock_list_df, mock_financial_df, mock_profile_df, mock_indicator_df):
         """测试批量获取时使用缓存"""
         mock_ak.stock_info_a_code_name.return_value = mock_stock_list_df
         mock_ak.stock_financial_analysis_indicator.return_value = mock_financial_df
         mock_ak.stock_profile_cninfo.return_value = mock_profile_df
+        mock_ak.stock_a_indicator_lg.return_value = mock_indicator_df
         
         repo = AKShareMarketDataRepository()
         code1 = StockCode('600000.SH')
@@ -256,11 +275,12 @@ class TestAKShareMarketDataRepository:
     # ==================== 行业信息测试 ====================
     
     @patch('shared_kernel.infrastructure.akshare_market_data_repository.ak')
-    def test_get_available_industries(self, mock_ak, mock_stock_list_df, mock_financial_df, mock_profile_df):
+    def test_get_available_industries(self, mock_ak, mock_stock_list_df, mock_financial_df, mock_profile_df, mock_indicator_df):
         """测试获取可用行业列表"""
         mock_ak.stock_info_a_code_name.return_value = mock_stock_list_df
         mock_ak.stock_financial_analysis_indicator.return_value = mock_financial_df
         mock_ak.stock_profile_cninfo.return_value = mock_profile_df
+        mock_ak.stock_a_indicator_lg.return_value = mock_indicator_df
         
         repo = AKShareMarketDataRepository()
         
@@ -292,11 +312,12 @@ class TestAKShareMarketDataRepository:
         assert (datetime.now() - update_time).total_seconds() < 1
     
     @patch('shared_kernel.infrastructure.akshare_market_data_repository.ak')
-    def test_get_last_update_time_after_fetch(self, mock_ak, mock_stock_list_df, mock_financial_df, mock_profile_df):
+    def test_get_last_update_time_after_fetch(self, mock_ak, mock_stock_list_df, mock_financial_df, mock_profile_df, mock_indicator_df):
         """测试获取数据后的更新时间"""
         mock_ak.stock_info_a_code_name.return_value = mock_stock_list_df
         mock_ak.stock_financial_analysis_indicator.return_value = mock_financial_df
         mock_ak.stock_profile_cninfo.return_value = mock_profile_df
+        mock_ak.stock_a_indicator_lg.return_value = mock_indicator_df
         
         repo = AKShareMarketDataRepository()
         

@@ -208,6 +208,12 @@ class AKShareMarketDataRepository(IMarketDataRepository[Stock]):
         - 速动比率
         - 营收增长率
         - 净利润增长率
+        
+        使用 stock_a_indicator_lg 接口获取市场估值指标：
+        - PE (市盈率 TTM)
+        - PB (市净率)
+        - 总市值
+        - 股息率
         """
         result: Dict[str, Optional[float]] = {}
         
@@ -219,29 +225,40 @@ class AKShareMarketDataRepository(IMarketDataRepository[Stock]):
                 start_year=str(current_year - 1)
             )
             
-            if df.empty:
-                return result
-            
-            # 取最新一期数据
-            latest = df.iloc[-1]
-            
-            # 映射字段
-            result['roe'] = self._safe_float(latest.get('净资产收益率(%)'))
-            result['eps'] = self._safe_float(latest.get('摊薄每股收益(元)'))
-            result['debt_ratio'] = self._safe_float(latest.get('资产负债率(%)'))
-            result['revenue_growth'] = self._safe_float(latest.get('主营业务收入增长率(%)'))
-            result['profit_growth'] = self._safe_float(latest.get('净利润增长率(%)'))
-            
-            # 流动比率和速动比率
-            result['current_ratio'] = self._safe_float(latest.get('流动比率'))
-            result['quick_ratio'] = self._safe_float(latest.get('速动比率'))
-            
-            # 毛利率和净利率
-            result['gross_margin'] = self._safe_float(latest.get('销售毛利率(%)'))
-            result['net_margin'] = self._safe_float(latest.get('销售净利率(%)'))
+            if not df.empty:
+                # 取最新一期数据
+                latest = df.iloc[-1]
+                
+                # 映射字段
+                result['roe'] = self._safe_float(latest.get('净资产收益率(%)'))
+                result['eps'] = self._safe_float(latest.get('摊薄每股收益(元)'))
+                result['debt_ratio'] = self._safe_float(latest.get('资产负债率(%)'))
+                result['revenue_growth'] = self._safe_float(latest.get('主营业务收入增长率(%)'))
+                result['profit_growth'] = self._safe_float(latest.get('净利润增长率(%)'))
+                
+                # 流动比率和速动比率
+                result['current_ratio'] = self._safe_float(latest.get('流动比率'))
+                result['quick_ratio'] = self._safe_float(latest.get('速动比率'))
+                
+                # 毛利率和净利率
+                result['gross_margin'] = self._safe_float(latest.get('销售毛利率(%)'))
+                result['net_margin'] = self._safe_float(latest.get('销售净利率(%)'))
             
         except Exception as e:
             logger.debug(f"获取股票 {pure_code} 财务指标失败: {e}")
+        
+        # 获取市场估值指标（PE、PB、总市值、股息率）
+        try:
+            indicator_df = ak.stock_a_indicator_lg(symbol=pure_code)
+            if indicator_df is not None and not indicator_df.empty:
+                # 取最新一行数据
+                latest_indicator = indicator_df.iloc[-1]
+                result['pe'] = self._safe_float(latest_indicator.get('pe_ttm'))
+                result['pb'] = self._safe_float(latest_indicator.get('pb'))
+                result['market_cap'] = self._safe_float(latest_indicator.get('total_mv'))
+                result['dividend_yield'] = self._safe_float(latest_indicator.get('dv_ratio'))
+        except Exception as e:
+            logger.debug(f"获取股票 {pure_code} 市场估值指标失败: {e}")
         
         return result
     
