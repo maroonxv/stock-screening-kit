@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Table, Button, Space, Popconfirm, message, Tag, Typography } from 'antd';
+import { Table, Button, Space, Popconfirm, message, Tag, Typography, Modal } from 'antd';
 import { PlusOutlined, PlayCircleOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { screeningApi } from '../services/api';
+import ExecutionProgress from '../components/ExecutionProgress';
 
 const { Title } = Typography;
 
@@ -10,6 +11,7 @@ function StrategyListPage() {
   const [strategies, setStrategies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [executingId, setExecutingId] = useState(null);
+  const [executingTaskId, setExecutingTaskId] = useState(null);
   const navigate = useNavigate();
 
   const fetchStrategies = useCallback(async () => {
@@ -42,19 +44,38 @@ function StrategyListPage() {
     setExecutingId(id);
     try {
       const response = await screeningApi.executeStrategy(id);
-      const sessionId = response.data?.session_id;
-      message.success('策略执行成功');
-      if (sessionId) {
-        navigate(`/results/${sessionId}`);
+      const taskId = response.data?.task_id;
+      if (taskId) {
+        setExecutingTaskId(taskId);
       } else {
-        navigate('/results');
+        message.warning('未获取到任务 ID');
+        setExecutingId(null);
       }
     } catch (err) {
       message.error('执行失败: ' + (err.response?.data?.error || err.message));
-    } finally {
       setExecutingId(null);
     }
   };
+
+  const handleExecutionComplete = useCallback((result) => {
+    setExecutingTaskId(null);
+    setExecutingId(null);
+    message.success(`策略执行完成，匹配 ${result?.matched_count ?? 0} 只股票`);
+    const sessionId = result?.session_id;
+    if (sessionId) {
+      navigate(`/results/${sessionId}`);
+    }
+  }, [navigate]);
+
+  const handleExecutionFailed = useCallback(() => {
+    setExecutingTaskId(null);
+    setExecutingId(null);
+  }, []);
+
+  const handleExecutionCancel = useCallback(() => {
+    setExecutingTaskId(null);
+    setExecutingId(null);
+  }, []);
 
   const columns = [
     {
@@ -155,6 +176,26 @@ function StrategyListPage() {
           创建策略
         </Button>
       </div>
+
+      <Modal
+        title={null}
+        open={!!executingTaskId}
+        footer={null}
+        closable={false}
+        maskClosable={false}
+        width={520}
+        destroyOnClose
+      >
+        {executingTaskId && (
+          <ExecutionProgress
+            taskId={executingTaskId}
+            onComplete={handleExecutionComplete}
+            onFailed={handleExecutionFailed}
+            onCancel={handleExecutionCancel}
+          />
+        )}
+      </Modal>
+
       <Table
         columns={columns}
         dataSource={strategies}

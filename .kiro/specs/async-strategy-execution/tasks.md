@@ -98,17 +98,17 @@
     - 在 app.py 中添加启动钩子，将 RUNNING 任务标记为 FAILED
     - _Requirements: 8.3_
 
-- [ ] 8. 前端实现
-  - [ ] 8.1 扩展 API 服务
+- [x] 8. 前端实现
+  - [x] 8.1 扩展 API 服务
     - 修改 `frontend/src/services/api.js`，添加任务相关 API
     - _Requirements: 7.1_
-  - [ ] 8.2 实现 WebSocket 客户端
+  - [x] 8.2 实现 WebSocket 客户端
     - 创建 `frontend/src/services/screeningSocket.js`
     - _Requirements: 7.2_
-  - [ ] 8.3 实现执行进度组件
+  - [x] 8.3 实现执行进度组件
     - 创建 `frontend/src/components/ExecutionProgress.jsx`
     - _Requirements: 7.3, 7.4, 7.5, 7.6_
-  - [ ] 8.4 修改策略执行页面
+  - [x] 8.4 修改策略执行页面
     - 集成进度组件，处理异步执行流程
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 

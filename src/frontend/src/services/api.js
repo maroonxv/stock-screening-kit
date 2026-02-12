@@ -34,6 +34,11 @@ export const screeningApi = {
   getSessions: (params) => apiClient.get('/screening/sessions', { params }),
   getSession: (id) => apiClient.get(`/screening/sessions/${id}`),
 
+  // Tasks
+  getTasks: (params) => apiClient.get('/screening/tasks', { params }),
+  getTask: (id) => apiClient.get(`/screening/tasks/${id}`),
+  cancelTask: (id) => apiClient.post(`/screening/tasks/${id}/cancel`),
+
   // Watchlists
   getWatchlists: (params) => apiClient.get('/screening/watchlists', { params }),
   getWatchlist: (id) => apiClient.get(`/screening/watchlists/${id}`),
