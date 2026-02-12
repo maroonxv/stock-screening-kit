@@ -400,15 +400,27 @@ def get_intelligence_service(app):
     # 创建 Redis checkpointer（用于 LangGraph 状态持久化）
     checkpointer = create_redis_checkpointer()
     
+    # 创建 AKShare 数据提供者实例（用于增强工作流分析质量）
+    from contexts.intelligence.infrastructure.data.akshare_news_provider import (
+        AKShareNewsProvider
+    )
+    from contexts.intelligence.infrastructure.data.akshare_announcement_provider import (
+        AKShareAnnouncementProvider
+    )
+    news_provider = AKShareNewsProvider()
+    announcement_provider = AKShareAnnouncementProvider()
+    
     # 创建工作流服务实例
     research_service = IndustryResearchWorkflowService(
         deepseek_client=deepseek_client,
         checkpointer=checkpointer,
+        news_provider=news_provider,
     )
     
     credibility_service = CredibilityVerificationWorkflowService(
         deepseek_client=deepseek_client,
         checkpointer=checkpointer,
+        announcement_provider=announcement_provider,
     )
     
     # 创建应用服务

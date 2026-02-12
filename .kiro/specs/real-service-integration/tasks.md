@@ -98,12 +98,12 @@
     - 获取新闻数据后拼接到 LLM prompt 中
     - 数据获取失败时降级为仅使用 LLM 知识
     - _Requirements: 5.3, 5.5_
-  - [-] 7.4 改造可信度验证工作流的证据收集 Agent，注入公告数据上下文
+  - [x] 7.4 改造可信度验证工作流的证据收集 Agent，注入公告数据上下文
     - 在 `_build_evidence_collection_node` 中接受可选的 `IAnnouncementDataProvider` 参数
     - 获取公告数据后拼接到 LLM prompt 中
     - 数据获取失败时降级为仅使用 LLM 知识
     - _Requirements: 5.4, 5.5_
-  - [~] 7.5 在 `app.py` 的 `get_intelligence_service` 中注入数据提供者
+  - [-] 7.5 在 `app.py` 的 `get_intelligence_service` 中注入数据提供者
     - 创建 AKShare 数据提供者实例并注入到工作流服务中
     - _Requirements: 5.1, 5.2_
   - [~] 7.6 编写数据提供者和工作流增强的单元测试
