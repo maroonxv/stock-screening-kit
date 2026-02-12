@@ -113,15 +113,15 @@ function StrategyListPage() {
             type="primary"
             size="small"
             icon={<PlayCircleOutlined />}
-            loading={executingId === record.id}
-            onClick={() => handleExecute(record.id)}
+            loading={executingId === record.strategy_id}
+            onClick={() => handleExecute(record.strategy_id)}
           >
             执行
           </Button>
           <Popconfirm
             title="确认删除"
             description="确定要删除这个策略吗？"
-            onConfirm={() => handleDelete(record.id)}
+            onConfirm={() => handleDelete(record.strategy_id)}
             okText="确定"
             cancelText="取消"
           >
@@ -158,7 +158,7 @@ function StrategyListPage() {
       <Table
         columns={columns}
         dataSource={strategies}
-        rowKey="id"
+        rowKey="strategy_id"
         loading={loading}
         pagination={{ pageSize: 10, showSizeChanger: true, showTotal: (total) => `共 ${total} 条` }}
         locale={{ emptyText: '暂无策略数据' }}
