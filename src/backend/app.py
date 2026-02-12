@@ -160,10 +160,11 @@ def get_strategy_service(app):
     scoring_service = ScoringServiceImpl()
     calc_service = IndicatorCalculationServiceImpl()
     
-    # 创建市场数据仓储（这里使用 mock，实际应该连接真实数据源）
-    # TODO: 实现真实的 MarketDataRepository
-    from unittest.mock import MagicMock
-    market_data_repo = MagicMock()
+    # 创建市场数据仓储（使用 AKShare 获取真实数据）
+    from shared_kernel.infrastructure.akshare_market_data_repository import (
+        AKShareMarketDataRepository
+    )
+    market_data_repo = AKShareMarketDataRepository(max_workers=5)
     
     # 创建应用服务
     service = ScreeningStrategyService(

@@ -38,3 +38,5 @@ type 取值：
 
 
 ## 本项目通过 Docker 部署，部署方案在 deploy目录下。如无特殊声明，所有修改的目的都是改变Docker容器中的程序行为。
+
+当你对代码进行改动之后，自动在 deploy/ 目录下运行 docker compose up -d --build
