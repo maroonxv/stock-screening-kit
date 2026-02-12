@@ -5,7 +5,7 @@ Requirements: 8.2
 from sqlalchemy import Column, String, Integer, Text, DateTime, Index
 from sqlalchemy.dialects.postgresql import JSONB
 
-from app import db
+from extensions import db
 
 
 class ExecutionTaskPO(db.Model):

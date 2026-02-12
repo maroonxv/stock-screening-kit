@@ -10,7 +10,7 @@ Requirements: 6.1, 6.6
 from sqlalchemy import Column, String, DateTime, Integer, Float, Index
 from sqlalchemy.dialects.postgresql import JSONB
 
-from app import db
+from extensions import db
 
 
 class ScreeningSessionPO(db.Model):

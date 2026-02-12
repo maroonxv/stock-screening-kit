@@ -22,7 +22,7 @@ from sqlalchemy import JSON, event, types
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.compiler import compiles
 
-from app import db
+from extensions import db
 from contexts.intelligence.domain.models.investigation_task import InvestigationTask
 from contexts.intelligence.domain.value_objects.identifiers import TaskId
 from contexts.intelligence.domain.value_objects.credibility_score import CredibilityScore

@@ -4,7 +4,7 @@ This module provides SQLAlchemy ORM models (Persistence Objects) for the screeni
 The db instance is imported from the main app module to ensure a single SQLAlchemy instance.
 """
 
-from app import db
+from extensions import db
 
 from .screening_strategy_po import ScreeningStrategyPO
 from .screening_session_po import ScreeningSessionPO

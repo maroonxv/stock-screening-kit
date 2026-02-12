@@ -1,17 +1,10 @@
 """Flask 应用入口"""
 import os
 from flask import Flask, jsonify
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 from flask_cors import CORS
-from flask_socketio import SocketIO
 
 from config import config
-
-# 初始化扩展
-db = SQLAlchemy()
-migrate = Migrate()
-socketio = SocketIO()
+from extensions import db, migrate, socketio
 
 
 def create_app(config_name=None):

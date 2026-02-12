@@ -9,7 +9,7 @@ Requirements: 6.1, 6.5
 from sqlalchemy import Column, String, Text, DateTime, Index
 from sqlalchemy.dialects.postgresql import JSONB
 
-from app import db
+from extensions import db
 
 
 class WatchListPO(db.Model):

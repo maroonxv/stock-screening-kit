@@ -10,7 +10,7 @@ Requirements: 5.1
 from sqlalchemy import Column, String, Text, Integer, DateTime, Index
 from sqlalchemy.dialects.postgresql import JSONB
 
-from app import db
+from extensions import db
 
 
 class InvestigationTaskPO(db.Model):

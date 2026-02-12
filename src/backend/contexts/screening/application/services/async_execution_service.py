@@ -81,7 +81,8 @@ class AsyncExecutionService:
 
     def _execute_task(self, task_id: str, strategy_id: str) -> None:
         """在后台线程中执行任务（需要 Flask 应用上下文）"""
-        from app import create_app, db
+        from app import create_app
+        from extensions import db
 
         app = create_app()
         with app.app_context():
