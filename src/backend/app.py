@@ -13,6 +13,8 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)s [%(name)s] %(message)s'
 )
 
+logger = logging.getLogger(__name__)
+
 
 def create_app(config_name=None):
     """应用工厂函数"""
@@ -385,6 +387,10 @@ def get_intelligence_service(app):
     else:
         # 在没有 API key 的情况下，创建一个带有占位符的配置
         # 这允许应用启动，但实际 API 调用会失败
+        logger.warning(
+            "DEEPSEEK_API_KEY 环境变量未配置，智能分析功能将无法正常工作。"
+            "请在 deploy/.env 中设置 DEEPSEEK_API_KEY。"
+        )
         deepseek_config = DeepSeekConfig(
             api_key='placeholder-key-not-configured',
             base_url=deepseek_base_url,

@@ -90,6 +90,11 @@ def create_industry_research():
     **Validates: Requirements 8.1**
     """
     try:
+        # 检查 DeepSeek API key 是否已配置
+        import os
+        if not os.environ.get('DEEPSEEK_API_KEY', ''):
+            return jsonify({'error': 'DeepSeek API 密钥未配置，请在环境变量中设置 DEEPSEEK_API_KEY'}), 400
+
         # 解析和验证请求数据
         data = request.get_json(silent=True)
         req = IndustryResearchRequest.from_dict(data)
@@ -122,6 +127,11 @@ def create_credibility_verification():
     **Validates: Requirements 8.2**
     """
     try:
+        # 检查 DeepSeek API key 是否已配置
+        import os
+        if not os.environ.get('DEEPSEEK_API_KEY', ''):
+            return jsonify({'error': 'DeepSeek API 密钥未配置，请在环境变量中设置 DEEPSEEK_API_KEY'}), 400
+
         # 解析和验证请求数据
         data = request.get_json(silent=True)
         req = CredibilityVerificationRequest.from_dict(data)

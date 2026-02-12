@@ -42,7 +42,7 @@
     - **Validates: Requirements 1.1**
 
 - [ ] 3. 改造 CredibilityVerificationPage 接入真实 API 和 WebSocket
-  - [-] 3.1 重写 `src/frontend/src/pages/CredibilityVerificationPage.jsx` 的 `handleSubmit` 函数
+  - [x] 3.1 重写 `src/frontend/src/pages/CredibilityVerificationPage.jsx` 的 `handleSubmit` 函数
     - 导入 `intelligenceApi`、`connectWebSocket`、`joinTaskRoom`、`leaveTaskRoom`、`onTaskProgress`、`onTaskCompleted`、`onTaskFailed`、`disconnectWebSocket`
     - 将 `handleSubmit` 改为 `async` 函数
     - 调用 `intelligenceApi.createCredibilityVerification(stockCode, concept)` 获取 `task_id`
@@ -50,12 +50,12 @@
     - 移除 `simulateTaskProgress()` 函数和 `getMockResult()` 函数
     - 移除 `simulateTaskProgress` 的 `useCallback` 依赖
     - _Requirements: 2.1, 2.2_
-  - [~] 3.2 添加 WebSocket 事件订阅的 `useEffect`
+  - [x] 3.2 添加 WebSocket 事件订阅的 `useEffect`
     - 与 IndustryResearchPage 相同模式：订阅 `task_progress`、`task_completed`、`task_failed`
     - 所有回调需过滤 `data.task_id !== taskId` 的事件
     - cleanup 函数中取消所有订阅
     - _Requirements: 3.2, 3.3, 3.4, 3.5_
-  - [~] 3.3 添加组件卸载时的 WebSocket 清理逻辑
+  - [x] 3.3 添加组件卸载时的 WebSocket 清理逻辑
     - _Requirements: 3.6_
   - [~] 3.4 编写 CredibilityVerificationPage 单元测试
     - **Property 2: 可信度验证 API 调用正确性**
@@ -65,7 +65,7 @@
   - 确保所有测试通过，ask the user if questions arise.
 
 - [ ] 5. 后端 DeepSeek API 配置验证
-  - [~] 5.1 在 `src/backend/app.py` 的 `get_intelligence_service` 中添加 API key 缺失警告日志
+  - [-] 5.1 在 `src/backend/app.py` 的 `get_intelligence_service` 中添加 API key 缺失警告日志
     - 当 `DEEPSEEK_API_KEY` 为空时，使用 `logger.warning` 输出明确警告
     - _Requirements: 4.1_
   - [~] 5.2 在 `intelligence_controller.py` 的任务创建端点中添加 API key 检查
