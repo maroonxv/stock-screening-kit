@@ -98,7 +98,7 @@
     - 获取新闻数据后拼接到 LLM prompt 中
     - 数据获取失败时降级为仅使用 LLM 知识
     - _Requirements: 5.3, 5.5_
-  - [~] 7.4 改造可信度验证工作流的证据收集 Agent，注入公告数据上下文
+  - [-] 7.4 改造可信度验证工作流的证据收集 Agent，注入公告数据上下文
     - 在 `_build_evidence_collection_node` 中接受可选的 `IAnnouncementDataProvider` 参数
     - 获取公告数据后拼接到 LLM prompt 中
     - 数据获取失败时降级为仅使用 LLM 知识

@@ -57,6 +57,9 @@ from contexts.intelligence.infrastructure.ai.deepseek_client import (
 from contexts.intelligence.infrastructure.ai.industry_research_workflow import (
     _parse_json_response,
 )
+from contexts.intelligence.domain.repositories.announcement_data_provider import (
+    IAnnouncementDataProvider,
+)
 from shared_kernel.value_objects.stock_code import StockCode
 
 logger = logging.getLogger(__name__)
@@ -192,14 +195,43 @@ def _build_evidence_collection_node(
     deepseek_client: DeepSeekClient,
     retry_config: Optional[AgentRetryConfig] = None,
     failure_callback_holder: Optional[List] = None,
+    announcement_provider: Optional[IAnnouncementDataProvider] = None,
 ):
-    """构建 Agent 2: 实质证据收集 节点函数（支持失败重试）"""
+    """构建 Agent 2: 实质证据收集 节点函数（支持失败重试）
+
+    Args:
+        deepseek_client: DeepSeek LLM 客户端
+        retry_config: Agent 重试配置
+        failure_callback_holder: 失败回调持有者
+        announcement_provider: 可选的公告数据提供者，用于注入真实公告上下文增强分析质量
+    """
 
     async def _evidence_collection_core(state: CredibilityVerificationState) -> dict:
         """Agent 2 核心逻辑：收集股票与概念相关的实质证据"""
         stock_code = state["stock_code"]
         concept = state["concept"]
         main_business = state.get("main_business_description", "")
+
+        # 尝试获取公告数据作为上下文
+        announcement_context = ""
+        if announcement_provider is not None:
+            try:
+                stock_code_obj = StockCode(stock_code)
+                announcements = announcement_provider.fetch_announcements(stock_code_obj, days=30)
+                if announcements:
+                    formatted_items = []
+                    for ann in announcements[:10]:  # 限制数量避免 prompt 过长
+                        published_str = ann.published_at.strftime("%Y-%m-%d") if ann.published_at else "未知日期"
+                        formatted_items.append(
+                            f"- [{published_str}] [{ann.announcement_type}] {ann.title}\n  内容：{ann.content[:200]}"
+                        )
+                    announcement_context = (
+                        "\n\n以下是该股票近期公告数据，请结合这些真实公告进行证据分析：\n"
+                        + "\n".join(formatted_items)
+                    )
+                    logger.info("证据收集获取到 %d 条公告数据", len(announcements))
+            except Exception as e:
+                logger.warning("获取公告数据失败，降级为仅使用 LLM 知识: %s", str(e))
 
         prompt = (
             f"你是一位证据收集专家。请分析以下股票与概念相关的实质证据：\n\n"
@@ -216,6 +248,7 @@ def _build_evidence_collection_node(
             f'}}\n\n'
             f"如果没有找到相关证据，对应列表返回空数组。\n"
             f"请确保返回有效的 JSON 格式。"
+            f"{announcement_context}"
         )
 
         messages = [
@@ -430,6 +463,7 @@ def build_credibility_verification_workflow(
     checkpointer=None,
     retry_config: Optional[AgentRetryConfig] = None,
     failure_callback_holder: Optional[List] = None,
+    announcement_provider: Optional[IAnnouncementDataProvider] = None,
 ):
     """构建概念可信度验证 LangGraph 工作流
 
@@ -439,6 +473,7 @@ def build_credibility_verification_workflow(
                       为 None 时不使用 checkpointer
         retry_config: Agent 重试配置，为 None 时使用默认配置
         failure_callback_holder: 可变列表 [callback]，用于在运行时注入失败回调
+        announcement_provider: 可选的公告数据提供者，用于增强证据收集
 
     Returns:
         编译后的 LangGraph 工作流（CompiledGraph）
@@ -452,7 +487,7 @@ def build_credibility_verification_workflow(
     )
     workflow.add_node(
         "evidence_collection",
-        _build_evidence_collection_node(deepseek_client, retry_config, failure_callback_holder),
+        _build_evidence_collection_node(deepseek_client, retry_config, failure_callback_holder, announcement_provider),
     )
     workflow.add_node(
         "hype_history_detection",
@@ -551,6 +586,7 @@ class CredibilityVerificationWorkflowService(ICredibilityVerificationService):
         deepseek_client: DeepSeekClient,
         checkpointer=None,
         retry_config: Optional[AgentRetryConfig] = None,
+        announcement_provider: Optional[IAnnouncementDataProvider] = None,
     ):
         """初始化工作流服务
 
@@ -558,10 +594,12 @@ class CredibilityVerificationWorkflowService(ICredibilityVerificationService):
             deepseek_client: DeepSeek LLM 客户端
             checkpointer: LangGraph checkpointer（Redis 或 Memory）
             retry_config: Agent 重试配置，为 None 时使用默认配置
+            announcement_provider: 可选的公告数据提供者，用于增强证据收集
         """
         self._deepseek_client = deepseek_client
         self._checkpointer = checkpointer
         self._retry_config = retry_config
+        self._announcement_provider = announcement_provider
         # Mutable holder for failure callback — set before each execution.
         self._failure_callback_holder: List = [None]
         self._compiled_workflow = build_credibility_verification_workflow(
@@ -569,6 +607,7 @@ class CredibilityVerificationWorkflowService(ICredibilityVerificationService):
             checkpointer=checkpointer,
             retry_config=retry_config,
             failure_callback_holder=self._failure_callback_holder,
+            announcement_provider=announcement_provider,
         )
 
     async def verify_credibility(
