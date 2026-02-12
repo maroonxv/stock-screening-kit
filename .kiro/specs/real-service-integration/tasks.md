@@ -64,7 +64,7 @@
 - [ ] 4. Checkpoint - 确保前端改造完成
   - 确保所有测试通过，ask the user if questions arise.
 
-- [ ] 5. 后端 DeepSeek API 配置验证
+- [x] 5. 后端 DeepSeek API 配置验证
   - [x] 5.1 在 `src/backend/app.py` 的 `get_intelligence_service` 中添加 API key 缺失警告日志
     - 当 `DEEPSEEK_API_KEY` 为空时，使用 `logger.warning` 输出明确警告
     - _Requirements: 4.1_
@@ -74,7 +74,7 @@
     - _Requirements: 4.2_
   - [x] 5.3 更新 `.env.example` 文件，确保包含所有必需环境变量及说明
     - _Requirements: 4.3_
-  - [-] 5.4 编写后端 API key 验证的单元测试
+  - [x] 5.4 编写后端 API key 验证的单元测试
     - 测试 API key 为空时的警告日志
     - 测试 API key 为空时的 400 错误响应
     - _Requirements: 4.1, 4.2_
