@@ -91,20 +91,24 @@ def _recover_interrupted_tasks(app):
     Requirements: 8.3
     """
     with app.app_context():
-        from contexts.screening.infrastructure.persistence.repositories.execution_task_repository_impl import (
-            ExecutionTaskRepositoryImpl,
-        )
-        repo = ExecutionTaskRepositoryImpl(db.session)
-        running_tasks = repo.find_running_tasks()
-        for task in running_tasks:
-            task.fail("服务重启，任务中断")
-            repo.save(task)
-        if running_tasks:
-            db.session.commit()
-            import logging
-            logging.getLogger(__name__).info(
-                "已将 %d 个中断的 RUNNING 任务标记为 FAILED", len(running_tasks)
+        try:
+            from contexts.screening.infrastructure.persistence.repositories.execution_task_repository_impl import (
+                ExecutionTaskRepositoryImpl,
             )
+            repo = ExecutionTaskRepositoryImpl(db.session)
+            running_tasks = repo.find_running_tasks()
+            for task in running_tasks:
+                task.fail("服务重启，任务中断")
+                repo.save(task)
+            if running_tasks:
+                db.session.commit()
+                import logging
+                logging.getLogger(__name__).info(
+                    "已将 %d 个中断的 RUNNING 任务标记为 FAILED", len(running_tasks)
+                )
+        except Exception:
+            # 表可能尚未创建（首次迁移前），静默忽略
+            db.session.rollback()
 
 
 def register_blueprints(app):
